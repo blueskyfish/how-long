@@ -59,10 +59,10 @@ import { CountdownDialog, CountdownDialogContext, CountdownDialogResult } from '
         @for (countdown of countdowns(); track countdown.id) {
           <li class="border-border bg-card flex items-center gap-2 rounded-xl border pr-2">
             <a
-              class="hover:bg-accent/50 flex flex-1 items-center gap-3 rounded-l-xl px-4 py-3 transition-colors"
+              class="hover:bg-accent/50 flex min-w-0 flex-1 items-center gap-3 rounded-l-xl px-4 py-3 transition-colors"
               [routerLink]="['/admin', countdown.id]"
             >
-              <ng-icon name="lucideCalendar" class="text-muted-foreground text-lg" />
+              <ng-icon name="lucideCalendar" class="text-muted-foreground shrink-0 text-lg" />
               <span class="min-w-0">
                 <span class="block font-mono tabular-nums">{{ countdown.date }}</span>
                 <span class="text-muted-foreground block truncate text-sm">
