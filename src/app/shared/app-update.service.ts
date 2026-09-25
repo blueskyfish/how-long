@@ -67,9 +67,10 @@ export class AppUpdateService {
   private async applyUpdate(): Promise<void> {
     try {
       await this.updates.activateUpdate();
-    } finally {
-      this.reload();
+    } catch {
+      // The reload still loads whichever version the worker now serves.
     }
+    this.reload();
   }
 
   /** Offline or a failed request simply means no update this time. */
