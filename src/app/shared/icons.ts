@@ -37,6 +37,7 @@ export const APP_ICONS = {
  * prefetches the chunk, so they work offline. An unknown name — from an old or
  * hand-edited backup, say — renders nothing rather than failing.
  */
-export function loadAppointmentIcon(name: string): Promise<string> {
-  return import('./appointment-icon-svgs').then((m) => m.APPOINTMENT_ICON_SVGS[name] ?? '');
+export async function loadAppointmentIcon(name: string): Promise<string> {
+  const { APPOINTMENT_ICON_SVGS } = await import('./appointment-icon-svgs');
+  return APPOINTMENT_ICON_SVGS[name] ?? '';
 }
