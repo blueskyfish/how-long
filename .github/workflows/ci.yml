@@ -1,0 +1,35 @@
+# Runs on every pull request into main. The `test` job is a required status
+# check of the branch protection, so a pull request can only be merged once it
+# is green.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+
+      - name: Check formatting
+        run: npx prettier --check .
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+      - name: Run tests
+        run: npm test -- --watch=false
+
+      - name: Build
+        run: npm run build

@@ -15,9 +15,13 @@ between devices as a JSON file you download and drop back in.
 - **Backup** — export everything as JSON; import it back by file picker or by dropping the
   file onto the administration page, either replacing or adding to what is stored.
 - **Installable** — web app manifest and a service worker, so it works offline once loaded.
+  When a newer version has been published, a toast offers to update.
 - **Light and dark** — follows the operating system's colour scheme.
 
 ## Running it
+
+Node and npm are pinned in [`mise.toml`](mise.toml) (Node 24, npm 12); with
+[mise](https://mise.jdx.dev) installed, `mise install` sets them up.
 
 ```bash
 npm install
@@ -28,7 +32,26 @@ npm run build      # production bundle into dist/how-long
 
 The production build is a set of static files. Because routing uses the hash location
 strategy and `<base href="./">`, the `dist/how-long/browser` directory can be served from
-any path — no server-side rewrite rules required.
+any path — no server-side rewrite rules required. The service worker is the exception: with
+a relative base href it looks for its files at the server root, so a build served from a
+sub-path needs that path as its base href (`npm run build -- --base-href /how-long/`).
+
+## Deployment
+
+The app is published to GitHub Pages at <https://blueskyfish.github.io/how-long/>.
+
+- **Pull requests into `main`** run [`ci.yml`](.github/workflows/ci.yml): formatting
+  (`prettier --check`), `npm audit --audit-level=high`, the tests and a build. Its `test` job
+  is a required check, so a pull request can only be merged once it is green.
+- **A merged pull request** runs [`deploy.yml`](.github/workflows/deploy.yml): the same
+  checks and tests again on `main`, then the build with the `/how-long/` base href, then the
+  publish. A `guard` job first confirms the commit on `main` came from a merged pull
+  request; anything else is not published.
+- **Manually**, "Run workflow" on the Deploy workflow in the Actions tab publishes the current
+  `main`.
+
+`main` is protected: changes only arrive through pull requests, for administrators too.
+Merging stays a manual step on GitHub.
 
 ## Architecture
 

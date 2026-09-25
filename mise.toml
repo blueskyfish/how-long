@@ -1,0 +1,4 @@
+# Toolchain for local development and CI (jdx/mise-action reads this file).
+[tools]
+node = "24"
+npm = "12.0.2"

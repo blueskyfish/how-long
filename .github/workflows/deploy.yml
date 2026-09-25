@@ -1,0 +1,116 @@
+# Tests, builds and publishes the app to GitHub Pages after a pull request has
+# been merged into main. The branch protection on main only accepts changes
+# through pull requests; the `guard` job checks it once more, so a commit that
+# reached main any other way is never published. A manual run from the Actions
+# tab publishes the current main.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One publish at a time; a newer run waits instead of cancelling one in flight.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      deploy: ${{ steps.check.outputs.deploy }}
+    steps:
+      - name: Check that the commit comes from a merged pull request
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          SHA: ${{ github.sha }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            if [ "$REF" = "refs/heads/main" ]; then
+              echo "Manual run on main."
+              echo "deploy=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "Manual runs only publish main, not $REF."
+              echo "deploy=false" >> "$GITHUB_OUTPUT"
+            fi
+            exit 0
+          fi
+
+          # The merge commit of a merge, squash or rebase merge is the new tip
+          # of main. Retried briefly in case the pull request is not yet
+          # reported as merged when the push event fires.
+          for attempt in 1 2 3; do
+            pr=$(gh pr list --repo "$GITHUB_REPOSITORY" --state merged --base main \
+              --limit 30 --json number,mergeCommit \
+              --jq ".[] | select(.mergeCommit.oid == \"$SHA\") | .number")
+            if [ -n "$pr" ]; then
+              echo "Commit $SHA was merged through pull request #$pr."
+              echo "deploy=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Commit $SHA does not come from a merged pull request; not publishing."
+          echo "deploy=false" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: guard
+    if: needs.guard.outputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+
+      - name: Check formatting
+        run: npx prettier --check .
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+      - name: Run tests
+        run: npm test -- --watch=false
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+
+      # Pages serves the site from /<repository>/. The relative `./` base href in
+      # index.html works for the app itself, but the service worker's ngsw.json
+      # is then written with root-relative paths, so it would fetch /chunk-*.js
+      # instead of /<repository>/chunk-*.js and never install.
+      - name: Build
+        run: npm run build -- --base-href "/${{ github.event.repository.name }}/"
+
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist/how-long/browser
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
