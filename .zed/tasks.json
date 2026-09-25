@@ -34,7 +34,7 @@
     "tags": ["test"]
   },
   {
-    "label": "ng test: current file",
+    "label": "How Long :: Test :: Current File",
     "command": "npm test -- --watch=false --include \"$ZED_RELATIVE_FILE\"",
     "use_new_terminal": false,
     "allow_concurrent_runs": false,
