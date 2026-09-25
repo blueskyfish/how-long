@@ -1,0 +1,39 @@
+// Zed debug configurations for how-long. Start them via `debugger: start` (F4).
+// For more information, visit: https://zed.dev/docs/debugger
+[
+  {
+    // Start the "How Long :: Serve" task from .zed/tasks.json first. A dev server never exits,
+    // so it cannot be used as a "build" step here.
+    "label": "Debug app in Chrome (localhost:4200)",
+    "adapter": "JavaScript",
+    "type": "chrome",
+    "request": "launch",
+    "url": "http://localhost:4200/",
+    "webRoot": "$ZED_WORKTREE_ROOT",
+    "sourceMaps": true
+  },
+  {
+    "label": "Debug all tests (Vitest)",
+    "adapter": "JavaScript",
+    "type": "node",
+    "request": "launch",
+    "program": "$ZED_WORKTREE_ROOT/node_modules/@angular/cli/bin/ng.js",
+    "args": ["test", "--watch=false"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "autoAttachChildProcesses": true,
+    "console": "integratedTerminal",
+    "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+  },
+  {
+    "label": "Debug tests of current file (Vitest)",
+    "adapter": "JavaScript",
+    "type": "node",
+    "request": "launch",
+    "program": "$ZED_WORKTREE_ROOT/node_modules/@angular/cli/bin/ng.js",
+    "args": ["test", "--watch=false", "--include", "$ZED_RELATIVE_FILE"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "autoAttachChildProcesses": true,
+    "console": "integratedTerminal",
+    "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+  }
+]

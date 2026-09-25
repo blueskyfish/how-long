@@ -1,0 +1,68 @@
+// Zed tasks for how-long. Run them via `task: spawn` (alt-shift-t) or rerun the last one with `task: rerun` (alt-t).
+// For more information, visit: https://zed.dev/docs/tasks
+[
+  {
+    "label": "How Long :: Serve",
+    "command": "npm start",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "tags": ["serve"]
+  },
+  {
+    "label": "How Long :: Serve :: (LAN, for testing on a phone)",
+    "command": "npm start -- --host 0.0.0.0",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "tags": ["serve"]
+  },
+  {
+    "label": "How Long :: Test :: Watching",
+    "command": "npm test",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "tags": ["test"]
+  },
+  {
+    "label": "How Long :: Test :: Single Run",
+    "command": "npm test -- --watch=false",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "tags": ["test"]
+  },
+  {
+    "label": "ng test: current file",
+    "command": "npm test -- --watch=false --include \"$ZED_RELATIVE_FILE\"",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "tags": ["test"]
+  },
+  {
+    "label": "How Long :: Build",
+    "command": "npm run build",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "tags": ["build"]
+  },
+  {
+    "label": "How Long :: Build :: Watching",
+    "command": "npm run watch",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "tags": ["build"]
+  },
+  {
+    "label": "How Long :: Lint :: Prettier",
+    "command": "npx prettier --write .",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "no_focus",
+    "hide": "on_success"
+  }
+]
