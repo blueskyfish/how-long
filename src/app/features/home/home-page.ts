@@ -18,10 +18,18 @@ import { DayCounter } from './day-counter';
 /** Number of appointments shown before the "more" overlay is offered. */
 const PREVIEW_COUNT = 5;
 
+/** From this many days before the target date, and on the day itself, the page turns red. */
+const URGENT_WITHIN_DAYS = 3;
+
 @Component({
   selector: 'app-home-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [AppointmentList, CountdownPicker, DayCounter, HlmButton, NgIcon, RouterLink],
+  host: {
+    // On the host rather than <main>, so the tint spans the whole viewport, notch included.
+    class: 'data-urgent:bg-destructive/10 block min-h-dvh transition-colors duration-700',
+    '[attr.data-urgent]': "urgent() ? '' : null",
+  },
   template: `
     <!--
       Sideways on a phone there is no vertical room to stack, so the two blocks
@@ -35,7 +43,7 @@ const PREVIEW_COUNT = 5;
     >
       @if (active(); as countdown) {
         <div class="landscape-phone:min-w-0 landscape-phone:flex-1">
-          <app-day-counter [days]="daysRemaining()" />
+          <app-day-counter [days]="daysRemaining()" [urgent]="urgent()" />
 
           <div class="landscape-phone:mt-3 mt-6 flex justify-center">
             <app-countdown-picker
@@ -131,6 +139,12 @@ export class HomePage {
   protected readonly daysRemaining = computed(() => {
     const countdown = this.active();
     return countdown ? daysUntil(countdown.date, this.today) : 0;
+  });
+
+  /** The target date is at most {@link URGENT_WITHIN_DAYS} days away and not yet passed. */
+  protected readonly urgent = computed(() => {
+    const days = this.daysRemaining();
+    return this.active() !== undefined && days >= 0 && days <= URGENT_WITHIN_DAYS;
   });
 
   /** Only appointments that are still ahead, capped at {@link PREVIEW_COUNT}. */

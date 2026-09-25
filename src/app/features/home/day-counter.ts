@@ -11,7 +11,9 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
-      class="border-primary/20 bg-card @container mx-auto flex aspect-square w-full max-w-[min(17rem,45dvh)] flex-col items-center justify-center rounded-[50%] border-4"
+      class="border-primary/20 bg-card @container data-urgent:border-destructive/40 data-urgent:shadow-[0_0_2.5rem_0.5rem_color-mix(in_oklch,var(--destructive)_35%,transparent)] mx-auto flex aspect-square w-full max-w-[min(17rem,45dvh)] flex-col items-center justify-center rounded-[50%] border-4 transition-[border-color,box-shadow] duration-700"
+      [attr.data-urgent]="urgent() ? '' : null"
+      data-testid="day-circle"
     >
       <span
         class="font-bold leading-none tabular-nums"
@@ -30,6 +32,9 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 export class DayCounter {
   /** Days until the target date; negative once it has passed. */
   readonly days = input.required<number>();
+
+  /** The target date is close: the rim turns red and the circle glows. */
+  readonly urgent = input(false);
 
   protected readonly count = computed(() => Math.abs(this.days()));
 
