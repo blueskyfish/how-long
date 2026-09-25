@@ -276,6 +276,35 @@ describe('HomePage', () => {
       expect(text('description')).toBe('Sooner');
     });
 
+    it('moves on to the next countdown once the remembered one has passed', async () => {
+      const passed = await repository.createCountdown({ date: inDays(-2), description: 'Passed' });
+      await repository.createCountdown({ date: inDays(10), description: 'Sooner' });
+      await render(passed);
+
+      await reopen();
+
+      expect(text('description')).toBe('Sooner');
+    });
+
+    it('keeps the remembered countdown on its target day', async () => {
+      await repository.createCountdown({ date: inDays(10), description: 'Sooner' });
+      const today = await repository.createCountdown({ date: inDays(0), description: 'Today' });
+      await render(today);
+
+      await reopen();
+
+      expect(text('description')).toBe('Today');
+    });
+
+    it('still shows a passed countdown named by the query parameter', async () => {
+      const passed = await repository.createCountdown({ date: inDays(-2), description: 'Passed' });
+      await repository.createCountdown({ date: inDays(10), description: 'Sooner' });
+
+      await render(passed);
+
+      expect(text('description')).toBe('Passed');
+    });
+
     it('falls back to the next countdown once the remembered one is deleted', async () => {
       await repository.createCountdown({ date: inDays(10), description: 'Sooner' });
       const later = await repository.createCountdown({ date: inDays(60), description: 'Later' });
