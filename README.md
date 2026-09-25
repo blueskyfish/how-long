@@ -8,8 +8,9 @@ between devices as a JSON file you download and drop back in.
 
 ## Features
 
-- **Countdown** — days remaining, the target date, an optional description, and the next
-  five upcoming appointments, with a "More" overlay for the full list.
+- **Countdown** — days remaining in a circle, the target date, an optional description, and
+  the next five upcoming appointments, with a "More" overlay for the full list. With several
+  target dates stored, the date doubles as a dropdown to switch between them.
 - **Administration** — manage several target dates and the appointments belonging to each.
 - **Backup** — export everything as JSON; import it back by file picker or by dropping the
   file onto the administration page, either replacing or adding to what is stored.
@@ -50,7 +51,7 @@ src/app/
     data/         Dexie schema (db.ts) and CountdownRepository
     services/     date-utils.ts, backup.service.ts
   features/
-    home/         the countdown page, its day-counter circle and "all appointments" overlay
+    home/         the countdown page, its day-counter circle, countdown picker and overlay
     admin/        overview, detail, and the create/edit dialogs
   shared/         appointment list, palette, dialogs, file and toast services
   ui/             Spartan helm components, generated — see "Regenerating" below
@@ -99,9 +100,16 @@ document.documentElement.style.setProperty('--safe-top', '59px');
 
 ### Which countdown does the start page show?
 
-The earliest countdown that has not passed — today counts as "not passed". If every target
-date is in the past, the most recent one is shown instead, counting upwards ("3 days ago"),
-so the page is never blank while data exists.
+By default the earliest countdown that has not passed — today counts as "not passed". If
+every target date is in the past, the most recent one is shown instead, counting upwards
+("3 days ago"), so the page is never blank while data exists. The rule lives in
+[`pickNextCountdown`](src/app/core/services/next-countdown.ts) and is shared with the
+repository.
+
+Once a second target date exists, the date under the circle becomes a dropdown. Picking one
+writes it to the `countdown` query parameter (`#/?countdown=3`), which is bound straight
+into the page as a component input: the choice survives a reload, the back button steps
+through it, and a parameter naming a deleted countdown falls back to the default.
 
 ### Backup format
 

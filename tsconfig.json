@@ -21,7 +21,8 @@
       "@spartan-ng/helm/label": ["./src/app/ui/label/src/index.ts"],
       "@spartan-ng/helm/select": ["./src/app/ui/select/src/index.ts"],
       "@spartan-ng/helm/separator": ["./src/app/ui/separator/src/index.ts"],
-      "@spartan-ng/helm/sonner": ["./src/app/ui/sonner/src/index.ts"]
+      "@spartan-ng/helm/sonner": ["./src/app/ui/sonner/src/index.ts"],
+      "@spartan-ng/helm/dropdown-menu": ["./src/app/ui/dropdown-menu/src/index.ts"]
     }
   },
   "angularCompilerOptions": {

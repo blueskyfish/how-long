@@ -1,16 +1,19 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmDialogService } from '@spartan-ng/helm/dialog';
 import { of, switchMap } from 'rxjs';
 import { CountdownRepository } from '../../core/data/countdown-repository';
+import { Countdown } from '../../core/models';
 import { daysUntil, toIsoDate } from '../../core/services/date-utils';
+import { pickNextCountdown } from '../../core/services/next-countdown';
 import { AppointmentList } from '../../shared/appointment-list';
-import { DayCounter } from './day-counter';
 import { openDialog } from '../../shared/dialog';
 import { AllAppointmentsDialog, AllAppointmentsDialogContext } from './all-appointments-dialog';
+import { CountdownPicker } from './countdown-picker';
+import { DayCounter } from './day-counter';
 
 /** Number of appointments shown before the "more" overlay is offered. */
 const PREVIEW_COUNT = 5;
@@ -18,19 +21,24 @@ const PREVIEW_COUNT = 5;
 @Component({
   selector: 'app-home-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AppointmentList, DayCounter, HlmButton, NgIcon, RouterLink],
+  imports: [AppointmentList, CountdownPicker, DayCounter, HlmButton, NgIcon, RouterLink],
   template: `
     <main
-      class="mx-auto flex min-h-dvh w-full max-w-md flex-col px-safe-6 pt-safe-16 pb-safe-28 text-center"
+      class="px-safe-6 pt-safe-16 pb-safe-28 mx-auto flex min-h-dvh w-full max-w-md flex-col text-center"
     >
-      @if (countdown(); as active) {
+      @if (active(); as countdown) {
         <app-day-counter [days]="daysRemaining()" />
-        <p class="mt-6 font-mono text-xl tabular-nums" data-testid="target-date">
-          {{ active.date }}
-        </p>
-        @if (active.description) {
+
+        <div class="mt-6 flex justify-center">
+          <app-countdown-picker
+            [countdowns]="countdowns()"
+            [selected]="countdown"
+            (selectedChange)="select($event)"
+          />
+        </div>
+        @if (countdown.description) {
           <p class="text-muted-foreground mt-1 text-sm" data-testid="description">
-            {{ active.description }}
+            {{ countdown.description }}
           </p>
         }
 
@@ -66,7 +74,7 @@ const PREVIEW_COUNT = 5;
       size="icon-lg"
       routerLink="/admin"
       aria-label="Administration"
-      class="fixed right-safe-6 bottom-safe-6 rounded-full shadow-lg"
+      class="right-safe-6 bottom-safe-6 fixed rounded-full shadow-lg"
       data-testid="admin-fab"
     >
       <ng-icon name="lucideSettings" class="text-lg" />
@@ -74,21 +82,33 @@ const PREVIEW_COUNT = 5;
   `,
 })
 export class HomePage {
+  /**
+   * Bound from the `countdown` query parameter, so the pick survives a reload and
+   * the back button steps through it. Unset — or pointing at a countdown that has
+   * since been deleted — falls back to the next one due.
+   */
+  readonly countdown = input<string>();
+
   private readonly repository = inject(CountdownRepository);
   private readonly dialog = inject(HlmDialogService);
+  private readonly router = inject(Router);
 
   /** Captured once so the rendered day count stays stable while the page is open. */
   private readonly today = new Date();
 
-  protected readonly countdown = toSignal(this.repository.watchNextCountdown(this.today), {
-    initialValue: undefined,
+  protected readonly countdowns = toSignal(this.repository.watchCountdowns(), { initialValue: [] });
+
+  protected readonly active = computed(() => {
+    const countdowns = this.countdowns();
+    const picked = countdowns.find((countdown) => `${countdown.id}` === this.countdown());
+    return picked ?? pickNextCountdown(countdowns, this.today);
   });
 
-  /** Re-queried whenever the active countdown changes. */
+  /** Re-queried whenever the shown countdown changes. */
   protected readonly appointments = toSignal(
-    toObservable(this.countdown).pipe(
-      switchMap((active) =>
-        active?.id === undefined ? of([]) : this.repository.watchAppointments(active.id),
+    toObservable(this.active).pipe(
+      switchMap((countdown) =>
+        countdown?.id === undefined ? of([]) : this.repository.watchAppointments(countdown.id),
       ),
     ),
     { initialValue: [] },
@@ -96,8 +116,8 @@ export class HomePage {
 
   /** Signed: negative once the target date has passed. */
   protected readonly daysRemaining = computed(() => {
-    const active = this.countdown();
-    return active ? daysUntil(active.date, this.today) : 0;
+    const countdown = this.active();
+    return countdown ? daysUntil(countdown.date, this.today) : 0;
   });
 
   /** Only appointments that are still ahead, capped at {@link PREVIEW_COUNT}. */
@@ -110,13 +130,17 @@ export class HomePage {
 
   protected readonly hasMore = computed(() => this.appointments().length > this.preview().length);
 
+  protected select(countdown: Countdown): void {
+    this.router.navigate([], { queryParams: { countdown: countdown.id } });
+  }
+
   protected showAll(): void {
-    const active = this.countdown();
-    if (!active) {
+    const countdown = this.active();
+    if (!countdown) {
       return;
     }
     openDialog<void, AllAppointmentsDialogContext>(this.dialog, AllAppointmentsDialog, {
-      targetDate: active.date,
+      targetDate: countdown.date,
       appointments: this.appointments(),
     });
   }

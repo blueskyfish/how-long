@@ -2,7 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { liveQuery } from 'dexie';
 import { Appointment, Countdown } from '../models';
-import { isValidIsoDate, toIsoDate } from '../services/date-utils';
+import { isValidIsoDate } from '../services/date-utils';
+import { pickNextCountdown } from '../services/next-countdown';
 import { HOW_LONG_DB } from './db';
 
 /**
@@ -54,20 +55,9 @@ export class CountdownRepository {
     });
   }
 
-  /**
-   * The countdown the start page shows: the earliest one still ahead (today counts
-   * as ahead), or — if every target date has passed — the most recent past one.
-   */
+  /** See {@link pickNextCountdown}. */
   async findNextCountdown(today: Date = new Date()): Promise<Countdown | undefined> {
-    const isoToday = toIsoDate(today);
-    const upcoming = await this.db.countdowns.where('date').aboveOrEqual(isoToday).first();
-    return upcoming ?? this.db.countdowns.orderBy('date').last();
-  }
-
-  watchNextCountdown(today: Date = new Date()): Observable<Countdown | undefined> {
-    return liveQuery(() => this.findNextCountdown(today)) as unknown as Observable<
-      Countdown | undefined
-    >;
+    return pickNextCountdown(await this.listCountdowns(), today);
   }
 
   // -- Appointments ----------------------------------------------------------

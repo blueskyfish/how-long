@@ -1,12 +1,15 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { Router } from '@angular/router';
 import { provideIcons } from '@ng-icons/core';
 import { provideRouter } from '@angular/router';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CountdownRepository } from '../../core/data/countdown-repository';
 import { HOW_LONG_DB, HowLongDatabase } from '../../core/data/db';
 import { toIsoDate } from '../../core/services/date-utils';
 import { APP_ICONS } from '../../shared/icons';
 import { settle } from '../../../testing/settle';
+import { CountdownPicker } from './countdown-picker';
 import { HomePage } from './home-page';
 
 describe('HomePage', () => {
@@ -39,10 +42,22 @@ describe('HomePage', () => {
   });
 
   /** Creates the component and lets its Dexie live queries settle. */
-  async function render(): Promise<void> {
+  async function render(selectedId?: number | string): Promise<void> {
     fixture = TestBed.createComponent(HomePage);
+    if (selectedId !== undefined) {
+      fixture.componentRef.setInput('countdown', String(selectedId));
+    }
     await settle(fixture);
   }
+
+  const addAppointment = (countdownId: number, date: string, title: string) =>
+    repository.createAppointment({
+      countdownId,
+      date,
+      title,
+      color: '#1e88e5',
+      icon: 'lucideFlag',
+    });
 
   it('shows the day count, target date and description', async () => {
     await repository.createCountdown({ date: inDays(42), description: 'Project launch' });
@@ -159,5 +174,77 @@ describe('HomePage', () => {
     expect(
       fixture.nativeElement.querySelector('[data-testid="admin-fab"]').getAttribute('href'),
     ).toBe('/admin');
+  });
+
+  describe('switching between countdowns', () => {
+    it('shows the countdown named by the query parameter, not the next one due', async () => {
+      await repository.createCountdown({ date: inDays(10), description: 'Sooner' });
+      const later = await repository.createCountdown({ date: inDays(60), description: 'Later' });
+
+      await render(later);
+
+      expect(text('target-date')).toContain(inDays(60));
+      expect(text('description')).toBe('Later');
+    });
+
+    it('shows the appointments of the picked countdown', async () => {
+      const sooner = await repository.createCountdown({ date: inDays(10) });
+      const later = await repository.createCountdown({ date: inDays(60) });
+      await addAppointment(sooner, inDays(5), 'Belongs to the sooner one');
+      await addAppointment(later, inDays(30), 'Belongs to the later one');
+
+      await render(later);
+
+      const list = fixture.nativeElement.querySelector('app-appointment-list').textContent;
+      expect(list).toContain('Belongs to the later one');
+      expect(list).not.toContain('Belongs to the sooner one');
+    });
+
+    it('falls back to the next countdown when the parameter names a deleted one', async () => {
+      await repository.createCountdown({ date: inDays(10), description: 'Sooner' });
+
+      await render(4711);
+
+      expect(text('target-date')).toContain(inDays(10));
+    });
+
+    it('falls back to the next countdown when the parameter is not a number', async () => {
+      await repository.createCountdown({ date: inDays(10), description: 'Sooner' });
+
+      await render('not-an-id');
+
+      expect(text('target-date')).toContain(inDays(10));
+    });
+
+    it('puts the pick in the URL so it survives a reload', async () => {
+      await repository.createCountdown({ date: inDays(10) });
+      const later = await repository.createCountdown({ date: inDays(60) });
+      await render();
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+      const picker = fixture.debugElement.query(By.directive(CountdownPicker));
+      picker.componentInstance.selectedChange.emit({ id: later, date: inDays(60) });
+
+      expect(navigate).toHaveBeenCalledWith([], { queryParams: { countdown: later } });
+    });
+
+    it('offers no picker while only one countdown exists', async () => {
+      await repository.createCountdown({ date: inDays(10) });
+
+      await render();
+
+      expect(fixture.nativeElement.querySelector('[data-testid="target-date"]').tagName).toBe('P');
+    });
+
+    it('offers a picker as soon as there are two', async () => {
+      await repository.createCountdown({ date: inDays(10) });
+      await repository.createCountdown({ date: inDays(60) });
+
+      await render();
+
+      expect(fixture.nativeElement.querySelector('[data-testid="target-date"]').tagName).toBe(
+        'BUTTON',
+      );
+    });
   });
 });
