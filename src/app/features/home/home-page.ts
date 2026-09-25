@@ -27,10 +27,11 @@ const PREVIEW_COUNT = 5;
       Sideways on a phone there is no vertical room to stack, so the two blocks
       sit side by side: the counter on the right, the appointments on the left.
       Reversing the row achieves that without moving the counter out of first
-      place in the DOM, where it belongs on every other screen.
+      place in the DOM, where it belongs on every other screen. The bottom
+      padding keeps a long, wrapped description clear of the floating button.
     -->
     <main
-      class="px-safe-6 pt-safe-16 pb-safe-28 landscape-phone:pt-safe-4 landscape-phone:pb-safe-4 landscape-phone:max-w-3xl landscape-phone:flex-row-reverse landscape-phone:items-center landscape-phone:gap-6 mx-auto flex min-h-dvh w-full max-w-md flex-col text-center"
+      class="px-safe-6 pt-safe-16 pb-safe-28 landscape-phone:pt-safe-4 landscape-phone:pb-safe-16 landscape-phone:max-w-3xl landscape-phone:flex-row-reverse landscape-phone:items-center landscape-phone:gap-6 mx-auto flex min-h-dvh w-full max-w-md flex-col text-center"
     >
       @if (active(); as countdown) {
         <div class="landscape-phone:min-w-0 landscape-phone:flex-1">
