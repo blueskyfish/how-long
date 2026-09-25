@@ -44,16 +44,34 @@ describe('DayCounter', () => {
   });
 
   it.each([
-    [7, 'text-7xl'],
-    [42, 'text-7xl'],
-    [365, 'text-6xl'],
-    [1000, 'text-5xl'],
-    [-4000, 'text-5xl'],
+    [7, 'text-[55cqw]'],
+    [42, 'text-[42cqw]'],
+    [365, 'text-[32cqw]'],
+    [1000, 'text-[25cqw]'],
+    [-4000, 'text-[25cqw]'],
   ])('steps the type down for %i so it stays inside the circle', (days, expected) => {
     render(days);
 
     expect(fixture.nativeElement.querySelector('[data-testid="day-count"]').className).toContain(
       expected,
+    );
+  });
+
+  it('sizes the number against the circle, not the viewport', () => {
+    render(42);
+
+    // cqw only resolves if the circle is itself a container.
+    expect(circle().className).toContain('@container');
+    expect(fixture.nativeElement.querySelector('[data-testid="day-count"]').className).toContain(
+      'cqw',
+    );
+  });
+
+  it('sets the number in bold', () => {
+    render(42);
+
+    expect(fixture.nativeElement.querySelector('[data-testid="day-count"]').className).toContain(
+      'font-bold',
     );
   });
 });

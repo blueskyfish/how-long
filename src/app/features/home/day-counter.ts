@@ -11,16 +11,16 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
-      class="border-primary/20 bg-card mx-auto flex aspect-square w-full max-w-[min(17rem,45dvh)] flex-col items-center justify-center rounded-[50%] border-4"
+      class="border-primary/20 bg-card @container mx-auto flex aspect-square w-full max-w-[min(17rem,45dvh)] flex-col items-center justify-center rounded-[50%] border-4"
     >
       <span
-        class="font-extralight leading-none tabular-nums"
+        class="font-bold leading-none tabular-nums"
         [class]="sizeClass()"
         data-testid="day-count"
         >{{ count() }}</span
       >
       <span
-        class="text-muted-foreground mt-2 text-xs tracking-widest uppercase"
+        class="text-muted-foreground mt-[3cqw] text-[max(0.625rem,4.5cqw)] tracking-widest uppercase"
         data-testid="day-label"
         >{{ label() }}</span
       >
@@ -45,14 +45,20 @@ export class DayCounter {
   });
 
   /**
-   * Steps the type down as the number grows, so four digits still fit inside the
-   * circle instead of overflowing it.
+   * Sized in `cqw` against the circle itself, so the number keeps its proportions
+   * when the circle shrinks — in landscape it is barely two thirds of its portrait
+   * width. The steps keep four digits from touching the rim.
    */
   protected readonly sizeClass = computed(() => {
-    const digits = `${this.count()}`.length;
-    if (digits <= 2) {
-      return 'text-7xl';
+    switch (`${this.count()}`.length) {
+      case 1:
+        return 'text-[55cqw]';
+      case 2:
+        return 'text-[42cqw]';
+      case 3:
+        return 'text-[32cqw]';
+      default:
+        return 'text-[25cqw]';
     }
-    return digits === 3 ? 'text-6xl' : 'text-5xl';
   });
 }
