@@ -44,7 +44,7 @@ const PREVIEW_COUNT = 5;
             />
           </div>
           @if (countdown.description) {
-            <p class="text-muted-foreground mt-1 text-sm" data-testid="description">
+            <p class="text-muted-foreground mt-1 text-sm wrap-anywhere" data-testid="description">
               {{ countdown.description }}
             </p>
           }

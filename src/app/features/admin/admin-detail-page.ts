@@ -50,7 +50,9 @@ import { CountdownDialog, CountdownDialogContext, CountdownDialogResult } from '
     <main class="mx-auto w-full max-w-2xl px-safe-4 pt-4 pb-safe-28">
       @if (countdown(); as active) {
         @if (active.description) {
-          <p class="text-muted-foreground px-1 pb-3 text-sm">{{ active.description }}</p>
+          <p class="text-muted-foreground px-1 pb-3 text-sm wrap-anywhere">
+            {{ active.description }}
+          </p>
         }
 
         <ul class="m-0 flex list-none flex-col gap-2 p-0">
@@ -59,7 +61,7 @@ import { CountdownDialog, CountdownDialogContext, CountdownDialogResult } from '
               <ng-icon
                 [name]="appointment.icon"
                 [style.color]="appointment.color"
-                class="text-lg"
+                class="shrink-0 text-lg"
                 aria-hidden="true"
               />
               <span class="min-w-0 flex-1">

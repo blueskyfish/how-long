@@ -17,7 +17,7 @@ export interface ConfirmDialogContext {
   template: `
     <div hlmDialogHeader>
       <h2 hlmDialogTitle>{{ context.title }}</h2>
-      <p class="text-muted-foreground text-sm">{{ context.message }}</p>
+      <p class="text-muted-foreground text-sm wrap-anywhere">{{ context.message }}</p>
     </div>
     <div hlmDialogFooter>
       <button hlmBtn variant="outline" (click)="close(false)" data-testid="cancel">Cancel</button>

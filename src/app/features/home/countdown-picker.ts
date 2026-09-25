@@ -33,7 +33,7 @@ import { Countdown } from '../../core/models';
       <ng-template #menu>
         <div
           hlmDropdownMenu
-          class="max-h-[calc(50dvh-var(--safe-top)-var(--safe-bottom))] min-w-64"
+          class="max-h-[calc(50dvh-var(--safe-top)-var(--safe-bottom))] max-w-[calc(100vw-2rem)] min-w-64"
           data-testid="countdown-menu"
         >
           @for (countdown of countdowns(); track countdown.id) {
@@ -49,10 +49,10 @@ import { Countdown } from '../../core/models';
                 class="text-base"
                 [class.invisible]="countdown.id !== selected().id"
               />
-              <span class="flex min-w-0 flex-col items-start">
+              <span class="flex min-w-0 flex-1 flex-col items-start">
                 <span class="font-mono tabular-nums">{{ countdown.date }}</span>
                 @if (countdown.description) {
-                  <span class="text-muted-foreground truncate text-xs">
+                  <span class="text-muted-foreground max-w-full truncate text-xs">
                     {{ countdown.description }}
                   </span>
                 }
