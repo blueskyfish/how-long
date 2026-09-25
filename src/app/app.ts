@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { HlmToaster } from '@spartan-ng/helm/sonner';
+import { AppUpdateService } from './shared/app-update.service';
 
 @Component({
   selector: 'app-root',
@@ -12,4 +13,8 @@ import { HlmToaster } from '@spartan-ng/helm/sonner';
     <hlm-toaster position="top-center" offset="calc(1rem + var(--safe-top))" richColors />
   `,
 })
-export class App {}
+export class App {
+  constructor() {
+    inject(AppUpdateService).start();
+  }
+}
