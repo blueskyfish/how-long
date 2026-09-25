@@ -18,7 +18,19 @@ npx prettier --write .                       # format (there is no ESLint)
 ```
 
 The same commands exist as Zed tasks in `.zed/tasks.json`, with debug configurations in
-`.zed/debug.json`.
+`.zed/debug.json`. Node 24 and npm 12 are pinned in `mise.toml`, which CI reads as well.
+
+## CI and deployment
+
+- `.github/workflows/ci.yml` runs on pull requests into `main`: `prettier --check .`,
+  `npm audit --audit-level=high`, the tests and a build. Keep all four green; its `test` job is
+  a required check of the branch protection.
+- `.github/workflows/deploy.yml` publishes to GitHub Pages after a pull request is merged
+  into `main` (a `guard` job skips commits that did not come from a merged pull request).
+  The Pages build uses `--base-href /how-long/`: with the relative `./` base href the service
+  worker would fetch its files from the server root and never install.
+- `main` is protected and accepts changes only through pull requests. Never push to it
+  directly, and leave merging to the user.
 
 ## Architecture
 
@@ -31,7 +43,7 @@ the hash location strategy (`#/admin/3`), so the build can be served from any pa
   components consume its `watch*()` methods (Dexie `liveQuery`, converted with `toSignal`).
 - **Domain invariants live in the repository, not in forms:** dates are `yyyy-mm-dd`
   strings of a real calendar day, and an appointment's date is strictly before its
-  countdown's target date. Both are checked when an appointment moves *and* when a
+  countdown's target date. Both are checked when an appointment moves _and_ when a
   countdown's date moves. Deleting a countdown deletes its appointments in one transaction.
 - **Dates** — day arithmetic goes through `core/services/date-utils.ts` (UTC midnights, so
   DST cannot cause off-by-one). Which countdown the start page shows is decided by
@@ -41,6 +53,9 @@ the hash location strategy (`#/admin/3`), so the build can be served from any pa
   restores in a single transaction; database ids are not exported.
 - **Router features** are exported as `routerFeatures` from `app.config.ts` and reused by the
   routing spec — add new router features there, not inline in `provideRouter`.
+- **Updates** — `shared/app-update.service.ts`, started by the app shell, checks for a newer
+  published build on start, when the page becomes visible again and every six hours, and
+  offers it in a toast. The service worker only runs in production builds.
 
 ## UI conventions
 
@@ -55,8 +70,8 @@ the hash location strategy (`#/admin/3`), so the build can be served from any pa
 - Edge-anchored elements must clear the iPhone notch and home indicator: use the safe-area
   utilities from `src/styles.css` (`pt-safe-16`, `px-safe-6`, `bottom-safe-6`, …) instead of
   plain spacing. Test without a notch by overriding `--safe-top` etc. on `<html>`.
-- Landscape phones use the custom `landscape-phone:` variant (bounded by `max-height:
-  30rem`, so tablets and desktops keep the stacked layout).
+- Landscape phones use the custom `landscape-phone:` variant. It is bounded by
+  `max-height: 30rem`, so tablets and desktops keep the stacked layout.
 - New appointment icons need two edits: register the Lucide import in `shared/icons.ts`,
   then list it in `APPOINTMENT_ICONS` in `shared/appointment-style.ts`.
 

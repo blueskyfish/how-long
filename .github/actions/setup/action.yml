@@ -1,0 +1,12 @@
+name: Setup
+description: Install the toolchain pinned in mise.toml and the npm dependencies.
+
+runs:
+  using: composite
+  steps:
+    - name: Install Node and npm from mise.toml
+      uses: jdx/mise-action@v4
+
+    - name: Install dependencies
+      shell: bash
+      run: npm ci
