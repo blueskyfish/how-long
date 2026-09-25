@@ -2,6 +2,12 @@
 @import 'tw-animate-css';
 
 /*
+ * A phone in landscape: wide but very short. Bounded by height so tablets and
+ * desktop windows, which are also "landscape", keep the regular layout.
+ */
+@custom-variant landscape-phone (@media (orientation: landscape) and (max-height: 30rem));
+
+/*
  * "Azure & Blue": azure carries the primary actions, a cooler blue tints the
  * neutral surfaces. Every token exists in both schemes; the dark values are
  * swapped in via `prefers-color-scheme`, which is also what Tailwind's built-in

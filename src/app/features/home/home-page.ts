@@ -23,26 +23,36 @@ const PREVIEW_COUNT = 5;
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [AppointmentList, CountdownPicker, DayCounter, HlmButton, NgIcon, RouterLink],
   template: `
+    <!--
+      Sideways on a phone there is no vertical room to stack, so the two blocks
+      sit side by side: the counter on the right, the appointments on the left.
+      Reversing the row achieves that without moving the counter out of first
+      place in the DOM, where it belongs on every other screen.
+    -->
     <main
-      class="px-safe-6 pt-safe-16 pb-safe-28 mx-auto flex min-h-dvh w-full max-w-md flex-col text-center"
+      class="px-safe-6 pt-safe-16 pb-safe-28 landscape-phone:pt-safe-4 landscape-phone:pb-safe-4 landscape-phone:max-w-3xl landscape-phone:flex-row-reverse landscape-phone:items-center landscape-phone:gap-6 mx-auto flex min-h-dvh w-full max-w-md flex-col text-center"
     >
       @if (active(); as countdown) {
-        <app-day-counter [days]="daysRemaining()" />
+        <div class="landscape-phone:min-w-0 landscape-phone:flex-1">
+          <app-day-counter [days]="daysRemaining()" />
 
-        <div class="mt-6 flex justify-center">
-          <app-countdown-picker
-            [countdowns]="countdowns()"
-            [selected]="countdown"
-            (selectedChange)="select($event)"
-          />
+          <div class="landscape-phone:mt-3 mt-6 flex justify-center">
+            <app-countdown-picker
+              [countdowns]="countdowns()"
+              [selected]="countdown"
+              (selectedChange)="select($event)"
+            />
+          </div>
+          @if (countdown.description) {
+            <p class="text-muted-foreground mt-1 text-sm" data-testid="description">
+              {{ countdown.description }}
+            </p>
+          }
         </div>
-        @if (countdown.description) {
-          <p class="text-muted-foreground mt-1 text-sm" data-testid="description">
-            {{ countdown.description }}
-          </p>
-        }
 
-        <section class="mt-10 text-left">
+        <section
+          class="landscape-phone:mt-0 landscape-phone:min-w-0 landscape-phone:flex-1 landscape-phone:max-h-[80dvh] landscape-phone:overflow-y-auto mt-10 text-left"
+        >
           <app-appointment-list [appointments]="preview()" emptyLabel="No appointments ahead." />
           @if (hasMore()) {
             <div class="mt-2 text-center">
@@ -59,7 +69,9 @@ const PREVIEW_COUNT = 5;
           }
         </section>
       } @else {
-        <div class="mt-24 flex flex-col items-center gap-4">
+        <div
+          class="landscape-phone:mt-0 landscape-phone:flex-1 mt-24 flex flex-col items-center gap-4"
+        >
           <ng-icon name="lucideHourglass" class="text-muted-foreground text-5xl" />
           <p class="text-muted-foreground text-lg" data-testid="empty-state">
             No countdown configured yet.

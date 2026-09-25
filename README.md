@@ -78,6 +78,19 @@ Day counts are computed from UTC midnights in
 [`date-utils.ts`](src/app/core/services/date-utils.ts), so a daylight saving transition in
 the range cannot produce an off-by-one.
 
+### Responsive layout
+
+Portrait stacks: counter, target date, description, appointments. A phone held sideways has
+no vertical room for that, so the start page puts the two blocks next to each other —
+counter on the right, appointments on the left — via the `landscape-phone` variant defined
+in [`src/styles.css`](src/styles.css). It is bounded by height (`max-height: 30rem`), so
+tablets and desktop windows, which are also "landscape", keep the stacked layout.
+
+Dialogs are sized against the viewport rather than their content: 92% of the width on a
+phone, capped at 32rem, and tall enough to leave the safe areas free, scrolling beyond that.
+Sizing them with `w-full` / `max-h-full` does not work — the CDK sizes its overlay panes to
+their content, so those percentages resolve against the content box and collapse.
+
 ### Safe areas
 
 `index.html` sets `viewport-fit=cover`, so on an iPhone the page paints behind the notch,

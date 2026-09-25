@@ -13,12 +13,13 @@ export function openDialog<TResult, TContext extends object>(
 ): Promise<TResult | undefined> {
   const ref = service.open<TResult, TContext>(component, {
     context,
-    // A tall form (the appointment dialog, say) must scroll rather than run off
-    // a phone screen. The cap is measured against the viewport minus the safe
-    // areas: `max-h-full` would resolve against the CDK's auto-height panes and
-    // therefore be ignored.
+    // Both dimensions are measured against the viewport rather than the pane:
+    // the CDK sizes its panes to their content, so the `w-full` / `max-h-full`
+    // the dialog itself carries resolve against that content box and are
+    // effectively ignored. Width fills a phone screen bar a small margin; height
+    // leaves the safe areas free and lets a tall form scroll.
     contentClass:
-      'sm:max-w-lg max-h-[calc(100dvh-var(--safe-top)-var(--safe-bottom)-2rem)] overflow-y-auto',
+      'w-[min(92vw,32rem)] max-w-[92vw] sm:max-w-[32rem] max-h-[calc(100dvh-var(--safe-top)-var(--safe-bottom)-2rem)] overflow-y-auto',
   });
   return firstValueFrom(ref.closed$);
 }
