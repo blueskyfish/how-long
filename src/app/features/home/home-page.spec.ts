@@ -1,18 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { Router } from '@angular/router';
-import { provideIcons } from '@ng-icons/core';
 import { provideRouter } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CountdownRepository } from '../../core/data/countdown-repository';
 import { HOW_LONG_DB, HowLongDatabase } from '../../core/data/db';
 import { toIsoDate } from '../../core/services/date-utils';
-import { APP_ICONS } from '../../shared/icons';
 import { settle } from '../../../testing/settle';
 import { memoryStorage } from '../../../testing/storage';
 import { CountdownPicker } from './countdown-picker';
 import { HomePage } from './home-page';
 import { COUNTDOWN_STORAGE } from './remembered-countdown';
+import { provideTestIcons } from '../../../testing/icons';
 
 describe('HomePage', () => {
   let db: HowLongDatabase;
@@ -35,7 +34,7 @@ describe('HomePage', () => {
         { provide: HOW_LONG_DB, useValue: db },
         { provide: COUNTDOWN_STORAGE, useValue: storage },
         provideRouter([]),
-        provideIcons(APP_ICONS),
+        provideTestIcons(),
       ],
     });
     repository = TestBed.inject(CountdownRepository);
@@ -239,7 +238,7 @@ describe('HomePage', () => {
           { provide: HOW_LONG_DB, useValue: db },
           { provide: COUNTDOWN_STORAGE, useValue: storage },
           provideRouter([]),
-          provideIcons(APP_ICONS),
+          provideTestIcons(),
         ],
       });
       await render();

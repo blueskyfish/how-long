@@ -1,73 +1,42 @@
 import {
-  lucideAlarmClock,
   lucideArrowLeft,
-  lucideBanknote,
-  lucideBriefcase,
-  lucideCake,
   lucideCalendar,
-  lucideCar,
   lucideCheck,
   lucideChevronDown,
   lucideChevronRight,
   lucideDownload,
-  lucideFlag,
-  lucideGift,
-  lucideGraduationCap,
-  lucideHeart,
-  lucideHotel,
   lucideHourglass,
-  lucideListChecks,
-  lucideMusic,
-  lucidePartyPopper,
   lucidePencil,
-  lucidePlane,
   lucidePlus,
   lucideSettings,
-  lucideStar,
-  lucideStethoscope,
   lucideTrash2,
-  lucideTrophy,
-  lucideUmbrella,
   lucideUpload,
-  lucideUtensils,
   lucideX,
 } from '@ng-icons/lucide';
 
-/**
- * Every icon the application renders, registered once at bootstrap so appointment
- * icons can be looked up by name at runtime.
- */
+/** Icons of the application's own UI, registered at bootstrap. */
 export const APP_ICONS = {
-  lucideAlarmClock,
   lucideArrowLeft,
-  lucideBanknote,
-  lucideBriefcase,
-  lucideCake,
   lucideCalendar,
-  lucideCar,
   lucideCheck,
   lucideChevronDown,
   lucideChevronRight,
   lucideDownload,
-  lucideFlag,
-  lucideGift,
-  lucideGraduationCap,
-  lucideHeart,
-  lucideHotel,
   lucideHourglass,
-  lucideListChecks,
-  lucideMusic,
-  lucidePartyPopper,
   lucidePencil,
-  lucidePlane,
   lucidePlus,
   lucideSettings,
-  lucideStar,
-  lucideStethoscope,
   lucideTrash2,
-  lucideTrophy,
-  lucideUmbrella,
   lucideUpload,
-  lucideUtensils,
   lucideX,
 };
+
+/**
+ * Resolves an appointment icon on first use. The dynamic import keeps the
+ * appointment icons out of the initial bundle; the service worker still
+ * prefetches the chunk, so they work offline. An unknown name — from an old or
+ * hand-edited backup, say — renders nothing rather than failing.
+ */
+export function loadAppointmentIcon(name: string): Promise<string> {
+  return import('./appointment-icon-svgs').then((m) => m.APPOINTMENT_ICON_SVGS[name] ?? '');
+}

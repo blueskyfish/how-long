@@ -206,8 +206,21 @@ The generator also registers the `@spartan-ng/helm/<name>` path alias in `tsconf
 
 ## Adding an icon
 
-Appointment icons are Lucide names. Add the import to
-[`src/app/shared/icons.ts`](src/app/shared/icons.ts) so it is registered at bootstrap, then
-list it in `APPOINTMENT_ICONS` in
-[`src/app/shared/appointment-style.ts`](src/app/shared/appointment-style.ts) to offer it in
-the appointment form.
+Appointment icons are Lucide names, offered in six groups of 20 to 30 that the appointment
+form switches between with a dropdown. To offer another one, add it with its label and group
+to `APPOINTMENT_ICONS` in
+[`src/app/shared/appointment-style.ts`](src/app/shared/appointment-style.ts), then run
+
+```bash
+npm run icons:generate
+```
+
+which writes the SVGs to `src/app/shared/appointment-icon-svgs.ts`. Run it again after
+upgrading `@ng-icons/lucide`; a spec fails while the two are out of step.
+
+The appointment icons are not registered at bootstrap. `loadAppointmentIcon` in
+[`src/app/shared/icons.ts`](src/app/shared/icons.ts) loads them on first use from their own
+chunk (about 10 kB compressed), which the service worker prefetches, so they also work
+offline. The SVGs are copied as literals rather than imported from `@ng-icons/lucide`: that
+package is a single module, and since the UI icons in `APP_ICONS` come from it, importing the
+appointment icons from it too would pull them into the initial bundle.

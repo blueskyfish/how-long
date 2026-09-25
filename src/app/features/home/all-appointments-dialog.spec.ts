@@ -1,10 +1,9 @@
 import { DIALOG_DATA } from '@angular/cdk/dialog';
 import { TestBed } from '@angular/core/testing';
-import { provideIcons } from '@ng-icons/core';
 import { BrnDialogRef } from '@spartan-ng/brain/dialog';
+import { provideTestIcons } from '../../../testing/icons';
 import { describe, expect, it, vi } from 'vitest';
 import { Appointment } from '../../core/models';
-import { APP_ICONS } from '../../shared/icons';
 import { AllAppointmentsDialog, AllAppointmentsDialogContext } from './all-appointments-dialog';
 
 describe('AllAppointmentsDialog', () => {
@@ -36,7 +35,7 @@ describe('AllAppointmentsDialog', () => {
       providers: [
         { provide: DIALOG_DATA, useValue: context },
         { provide: BrnDialogRef, useValue: { close } },
-        provideIcons(APP_ICONS),
+        provideTestIcons(),
       ],
     });
     const fixture = TestBed.createComponent(AllAppointmentsDialog);

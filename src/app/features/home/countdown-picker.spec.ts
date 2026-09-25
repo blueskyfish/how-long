@@ -1,9 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideIcons } from '@ng-icons/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Countdown } from '../../core/models';
-import { APP_ICONS } from '../../shared/icons';
 import { CountdownPicker } from './countdown-picker';
+import { provideTestIcons } from '../../../testing/icons';
 
 describe('CountdownPicker', () => {
   let fixture: ComponentFixture<CountdownPicker>;
@@ -13,7 +12,7 @@ describe('CountdownPicker', () => {
   const undated: Countdown = { id: 3, date: '2027-06-01' };
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideIcons(APP_ICONS)] });
+    TestBed.configureTestingModule({ providers: [provideTestIcons()] });
   });
 
   function render(countdowns: Countdown[], selected: Countdown) {

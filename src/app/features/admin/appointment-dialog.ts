@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  afterNextRender,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgIcon } from '@ng-icons/core';
 import { BrnDialogRef, injectBrnDialogContext } from '@spartan-ng/brain/dialog';
@@ -10,9 +19,12 @@ import { Appointment } from '../../core/models';
 import { isValidIsoDate, parseIsoDate, toIsoDate } from '../../core/services/date-utils';
 import {
   APPOINTMENT_COLORS,
+  APPOINTMENT_ICON_GROUPS,
   APPOINTMENT_ICONS,
+  AppointmentIconGroup,
   DEFAULT_APPOINTMENT_COLOR,
   DEFAULT_APPOINTMENT_ICON,
+  groupOfIcon,
 } from '../../shared/appointment-style';
 
 export interface AppointmentDialogContext {
@@ -97,9 +109,32 @@ export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'colo
         </div>
 
         <div class="grid gap-2">
-          <span hlmLabel>Icon</span>
-          <div class="grid grid-cols-5 gap-1 sm:grid-cols-10" role="radiogroup" aria-label="Icon">
-            @for (icon of icons; track icon.value) {
+          <div class="flex items-center justify-between gap-2">
+            <span hlmLabel id="appointment-icon-label">Icon</span>
+            <select
+              class="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-8 rounded-md border bg-transparent px-2 text-sm outline-none focus-visible:ring-3"
+              aria-label="Icon group"
+              data-testid="icon-group"
+              (change)="selectGroup($any($event.target).value)"
+            >
+              @for (group of iconGroups; track group) {
+                <option [value]="group" [selected]="group === iconGroup()">{{ group }}</option>
+              }
+            </select>
+          </div>
+          <!--
+            Four rows of size-8 buttons with gap-1, plus p-0.5 so the selected
+            border is not clipped; the rest scrolls. The stable gutter keeps the
+            columns from shifting when the scrollbar appears.
+          -->
+          <div
+            #iconGrid
+            class="relative grid max-h-36 grid-cols-5 content-start gap-1 overflow-y-auto p-0.5 [scrollbar-gutter:stable] sm:grid-cols-10"
+            role="radiogroup"
+            aria-labelledby="appointment-icon-label"
+            data-testid="icon-grid"
+          >
+            @for (icon of groupIcons(); track icon.value) {
               <button
                 type="button"
                 role="radio"
@@ -130,7 +165,18 @@ export class AppointmentDialog {
   private readonly dialogRef = inject<BrnDialogRef<AppointmentDialogResult>>(BrnDialogRef);
 
   protected readonly colors = APPOINTMENT_COLORS;
-  protected readonly icons = APPOINTMENT_ICONS;
+  protected readonly iconGroups = APPOINTMENT_ICON_GROUPS;
+
+  /** Opens on the group of the current icon, so editing starts where it left off. */
+  protected readonly iconGroup = signal<AppointmentIconGroup>(
+    groupOfIcon(this.context.appointment?.icon ?? DEFAULT_APPOINTMENT_ICON),
+  );
+
+  protected readonly groupIcons = computed(() =>
+    APPOINTMENT_ICONS.filter((icon) => icon.group === this.iconGroup()),
+  );
+
+  private readonly iconGrid = viewChild.required<ElementRef<HTMLElement>>('iconGrid');
 
   /** The day before the target date — also fed to the input's `max` attribute. */
   protected readonly maxDate = this.dayBeforeTarget();
@@ -151,6 +197,22 @@ export class AppointmentDialog {
    * explanation, since `touched` alone waits for the field to lose focus.
    */
   protected readonly dateTouched = signal(false);
+
+  constructor() {
+    // When editing, the current icon may sit below the rows that are visible.
+    afterNextRender(() => {
+      const grid = this.iconGrid().nativeElement;
+      const selected = grid.querySelector<HTMLElement>('[aria-checked="true"]');
+      if (selected) {
+        grid.scrollTop = selected.offsetTop - (grid.clientHeight - selected.offsetHeight) / 2;
+      }
+    });
+  }
+
+  protected selectGroup(group: AppointmentIconGroup): void {
+    this.iconGroup.set(group);
+    this.iconGrid().nativeElement.scrollTop = 0;
+  }
 
   protected save(): void {
     this.dateTouched.set(true);

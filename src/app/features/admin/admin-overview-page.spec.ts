@@ -1,14 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideIcons } from '@ng-icons/core';
 import { provideRouter } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CountdownRepository } from '../../core/data/countdown-repository';
 import { HOW_LONG_DB, HowLongDatabase } from '../../core/data/db';
-import { APP_ICONS } from '../../shared/icons';
 import { settle } from '../../../testing/settle';
 import { stubDialog } from '../../../testing/dialog';
 import { provideNotificationSpy } from '../../../testing/notification';
 import { AdminOverviewPage } from './admin-overview-page';
+import { provideTestIcons } from '../../../testing/icons';
 
 describe('AdminOverviewPage', () => {
   let db: HowLongDatabase;
@@ -21,7 +20,7 @@ describe('AdminOverviewPage', () => {
       providers: [
         { provide: HOW_LONG_DB, useValue: db },
         provideRouter([]),
-        provideIcons(APP_ICONS),
+        provideTestIcons(),
         provideNotificationSpy().provider,
       ],
     });
