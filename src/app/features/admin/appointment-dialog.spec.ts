@@ -1,13 +1,14 @@
 import { DIALOG_DATA } from '@angular/cdk/dialog';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideIcons } from '@ng-icons/core';
 import { BrnDialogRef } from '@spartan-ng/brain/dialog';
+import { provideTestIcons } from '../../../testing/icons';
 import { describe, expect, it, vi } from 'vitest';
 import {
+  APPOINTMENT_ICON_GROUPS,
+  APPOINTMENT_ICONS,
   DEFAULT_APPOINTMENT_COLOR,
   DEFAULT_APPOINTMENT_ICON,
 } from '../../shared/appointment-style';
-import { APP_ICONS } from '../../shared/icons';
 import { AppointmentDialog, AppointmentDialogContext } from './appointment-dialog';
 
 describe('AppointmentDialog', () => {
@@ -20,7 +21,7 @@ describe('AppointmentDialog', () => {
       providers: [
         { provide: DIALOG_DATA, useValue: context },
         { provide: BrnDialogRef, useValue: { close } },
-        provideIcons(APP_ICONS),
+        provideTestIcons(),
       ],
     });
     const fixture = TestBed.createComponent(AppointmentDialog);
@@ -140,10 +141,10 @@ describe('AppointmentDialog', () => {
   it('picks an icon from the grid', () => {
     const fixture = render({ targetDate: '2026-12-24' });
 
-    fixture.nativeElement.querySelector('[aria-label="Cake"]').click();
+    fixture.nativeElement.querySelector('[aria-label="Star"]').click();
     fixture.detectChanges();
 
-    expect(internals(fixture).form.getRawValue().icon).toBe('lucideCake');
+    expect(internals(fixture).form.getRawValue().icon).toBe('lucideStar');
   });
 
   it('closes with undefined when cancelled', () => {
@@ -152,5 +153,96 @@ describe('AppointmentDialog', () => {
     fixture.nativeElement.querySelector('[data-testid="cancel"]').click();
 
     expect(close).toHaveBeenCalledWith(undefined);
+  });
+
+  describe('icon picker', () => {
+    const labels = (fixture: ComponentFixture<AppointmentDialog>) =>
+      Array.from(
+        fixture.nativeElement.querySelectorAll('[data-testid="icon-grid"] [role="radio"]'),
+        (button: Element) => button.getAttribute('aria-label'),
+      );
+
+    const groupSelect = (fixture: ComponentFixture<AppointmentDialog>): HTMLSelectElement =>
+      fixture.nativeElement.querySelector('[data-testid="icon-group"]');
+
+    function pickGroup(fixture: ComponentFixture<AppointmentDialog>, group: string): void {
+      const select = groupSelect(fixture);
+      select.value = group;
+      select.dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+    }
+
+    const editing = (icon: string): AppointmentDialogContext => ({
+      targetDate: '2026-12-24',
+      appointment: {
+        id: 1,
+        countdownId: 1,
+        date: '2026-12-01',
+        title: 'Advent',
+        color: '#e53935',
+        icon,
+      },
+    });
+
+    it('shows four rows and scrolls the rest', () => {
+      const fixture = render({ targetDate: '2026-12-24' });
+
+      const grid = fixture.nativeElement.querySelector('[data-testid="icon-grid"]');
+      expect(grid.className).toContain('max-h-36');
+      expect(grid.className).toContain('overflow-y-auto');
+    });
+
+    it('offers every group in the dropdown', () => {
+      const fixture = render({ targetDate: '2026-12-24' });
+
+      const options = Array.from(groupSelect(fixture).options, (option) => option.value);
+      expect(options).toEqual([...APPOINTMENT_ICON_GROUPS]);
+    });
+
+    it('opens a new appointment on the first group', () => {
+      const fixture = render({ targetDate: '2026-12-24' });
+
+      expect(groupSelect(fixture).value).toBe('General');
+      expect(labels(fixture)).toEqual(
+        APPOINTMENT_ICONS.filter((icon) => icon.group === 'General').map((icon) => icon.name),
+      );
+    });
+
+    it('opens an existing appointment on the group of its icon', () => {
+      const fixture = render(editing('lucidePawPrint'));
+
+      expect(groupSelect(fixture).value).toBe('Health & sport');
+      expect(labels(fixture)).toContain('Pet');
+    });
+
+    it('shows only the icons of the picked group', () => {
+      const fixture = render({ targetDate: '2026-12-24' });
+
+      pickGroup(fixture, 'Celebrations');
+
+      expect(labels(fixture)).toContain('Cake');
+      expect(labels(fixture)).not.toContain('Calendar');
+      expect(labels(fixture)).toHaveLength(
+        APPOINTMENT_ICONS.filter((icon) => icon.group === 'Celebrations').length,
+      );
+    });
+
+    it('keeps the selected icon when switching to another group', () => {
+      const fixture = render({ targetDate: '2026-12-24' });
+      pickGroup(fixture, 'Celebrations');
+      fixture.nativeElement.querySelector('[aria-label="Cake"]').click();
+      fixture.detectChanges();
+
+      pickGroup(fixture, 'Travel & seasons');
+
+      expect(internals(fixture).form.getRawValue().icon).toBe('lucideCake');
+    });
+
+    it('opens an icon that is no longer offered on the first group', () => {
+      const fixture = render(editing('event'));
+
+      expect(groupSelect(fixture).value).toBe('General');
+      expect(internals(fixture).form.getRawValue().icon).toBe('event');
+    });
   });
 });

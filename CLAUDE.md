@@ -75,8 +75,12 @@ the hash location strategy (`#/admin/3`), so the build can be served from any pa
   plain spacing. Test without a notch by overriding `--safe-top` etc. on `<html>`.
 - Landscape phones use the custom `landscape-phone:` variant. It is bounded by
   `max-height: 30rem`, so tablets and desktops keep the stacked layout.
-- New appointment icons need two edits: register the Lucide import in `shared/icons.ts`,
-  then list it in `APPOINTMENT_ICONS` in `shared/appointment-style.ts`.
+- Appointment icons: list them (label, Lucide value, group) in `APPOINTMENT_ICONS` in
+  `shared/appointment-style.ts`, then run `npm run icons:generate` to regenerate
+  `shared/appointment-icon-svgs.ts`. Never import them from `@ng-icons/lucide` in app code or
+  add them to `APP_ICONS` (UI icons only): they are loaded lazily by `loadAppointmentIcon`,
+  and a static import would put them back into the initial bundle. Specs register all icons
+  with `provideTestIcons()` from `src/testing/icons.ts`.
 
 ## Tests
 

@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { provideIcons } from '@ng-icons/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { routerFeatures } from './app.config';
 import { routes } from './app.routes';
@@ -10,8 +9,8 @@ import { HOW_LONG_DB, HowLongDatabase } from './core/data/db';
 import { AdminDetailPage } from './features/admin/admin-detail-page';
 import { AdminOverviewPage } from './features/admin/admin-overview-page';
 import { HomePage } from './features/home/home-page';
-import { APP_ICONS } from './shared/icons';
 import { settle } from '../testing/settle';
+import { provideTestIcons } from '../testing/icons';
 
 describe('routing', () => {
   let db: HowLongDatabase;
@@ -23,7 +22,7 @@ describe('routing', () => {
       providers: [
         { provide: HOW_LONG_DB, useValue: db },
         provideRouter(routes, ...routerFeatures),
-        provideIcons(APP_ICONS),
+        provideTestIcons(),
       ],
     });
     repository = TestBed.inject(CountdownRepository);
