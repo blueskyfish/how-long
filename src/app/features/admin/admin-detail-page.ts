@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
@@ -9,6 +9,7 @@ import { CountdownRepository } from '../../core/data/countdown-repository';
 import { Appointment } from '../../core/models';
 import { ConfirmDialog, ConfirmDialogContext } from '../../shared/confirm-dialog';
 import { openDialog } from '../../shared/dialog';
+import { AppointmentIconGroup } from '../../shared/appointment-style';
 import { NotificationService } from '../../shared/notification.service';
 import {
   AppointmentDialog,
@@ -16,6 +17,7 @@ import {
   AppointmentDialogResult,
 } from './appointment-dialog';
 import { CountdownDialog, CountdownDialogContext, CountdownDialogResult } from './countdown-dialog';
+import { RememberedIconGroup } from './remembered-icon-group';
 
 @Component({
   selector: 'app-admin-detail-page',
@@ -126,6 +128,7 @@ export class AdminDetailPage {
   private readonly repository = inject(CountdownRepository);
   private readonly dialog = inject(HlmDialogService);
   private readonly notifications = inject(NotificationService);
+  private readonly iconGroups = inject(RememberedIconGroup);
 
   private readonly countdownId = computed(() => Number(this.id()));
 
@@ -144,6 +147,11 @@ export class AdminDetailPage {
     ),
     { initialValue: [] },
   );
+
+  constructor() {
+    // Opening another countdown starts its new appointments on the first group again.
+    effect(() => this.iconGroups.enter(this.countdownId()));
+  }
 
   protected async editCountdown(): Promise<void> {
     const active = this.countdown();
@@ -168,11 +176,13 @@ export class AdminDetailPage {
     const result = await openDialog<AppointmentDialogResult, AppointmentDialogContext>(
       this.dialog,
       AppointmentDialog,
-      { targetDate: active.date },
+      { targetDate: active.date, iconGroup: this.iconGroups.groupFor(active.id!) },
     );
     if (result) {
+      const { iconGroup, ...appointment } = result;
+      this.rememberIconGroup(active.id!, iconGroup);
       await this.run(() =>
-        this.repository.createAppointment({ ...result, countdownId: active.id! }),
+        this.repository.createAppointment({ ...appointment, countdownId: active.id! }),
       );
     }
   }
@@ -188,7 +198,9 @@ export class AdminDetailPage {
       { targetDate: active.date, appointment },
     );
     if (result) {
-      await this.run(() => this.repository.updateAppointment(appointment.id!, result));
+      const { iconGroup, ...changes } = result;
+      this.rememberIconGroup(active.id!, iconGroup);
+      await this.run(() => this.repository.updateAppointment(appointment.id!, changes));
     }
   }
 
@@ -200,6 +212,12 @@ export class AdminDetailPage {
     if (confirmed) {
       await this.repository.deleteAppointment(appointment.id!);
       this.notifications.success('Appointment deleted.');
+    }
+  }
+
+  private rememberIconGroup(countdownId: number, group: AppointmentIconGroup | undefined): void {
+    if (group) {
+      this.iconGroups.remember(countdownId, group);
     }
   }
 

@@ -31,9 +31,14 @@ export interface AppointmentDialogContext {
   /** The countdown's target date; appointments must fall strictly before it. */
   targetDate: string;
   appointment?: Appointment;
+  /** Group a new appointment opens the icon picker on; editing uses the icon's own group. */
+  iconGroup?: AppointmentIconGroup;
 }
 
-export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'color' | 'icon'>;
+export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'color' | 'icon'> & {
+  /** The group the icon picker showed on saving, for the caller to remember. */
+  iconGroup: AppointmentIconGroup;
+};
 
 /** Create / edit form for a single appointment. */
 @Component({
@@ -167,9 +172,14 @@ export class AppointmentDialog {
   protected readonly colors = APPOINTMENT_COLORS;
   protected readonly iconGroups = APPOINTMENT_ICON_GROUPS;
 
-  /** Opens on the group of the current icon, so editing starts where it left off. */
+  /**
+   * Editing opens on the group of the current icon, so it starts where it left
+   * off; a new appointment on the group the caller remembered, else the first.
+   */
   protected readonly iconGroup = signal<AppointmentIconGroup>(
-    groupOfIcon(this.context.appointment?.icon ?? DEFAULT_APPOINTMENT_ICON),
+    this.context.appointment
+      ? groupOfIcon(this.context.appointment.icon)
+      : (this.context.iconGroup ?? groupOfIcon(DEFAULT_APPOINTMENT_ICON)),
   );
 
   protected readonly groupIcons = computed(() =>
@@ -220,7 +230,7 @@ export class AppointmentDialog {
       return;
     }
     const { title, date, color, icon } = this.form.getRawValue();
-    this.dialogRef.close({ title: title.trim(), date, color, icon });
+    this.dialogRef.close({ title: title.trim(), date, color, icon, iconGroup: this.iconGroup() });
   }
 
   protected cancel(): void {
