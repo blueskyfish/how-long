@@ -7,6 +7,7 @@ import { settle } from '../../../testing/settle';
 import { stubDialog } from '../../../testing/dialog';
 import { provideNotificationSpy } from '../../../testing/notification';
 import { AdminDetailPage } from './admin-detail-page';
+import { AppointmentDialogContext } from './appointment-dialog';
 import { provideTestIcons } from '../../../testing/icons';
 
 describe('AdminDetailPage', () => {
@@ -93,6 +94,78 @@ describe('AdminDetailPage', () => {
     expect(await repository.listAppointments(countdownId)).toMatchObject([
       { date: '2026-12-01', title: 'Advent', color: '#e53935', icon: 'lucideStar' },
     ]);
+  });
+
+  describe('remembering the icon group', () => {
+    const saved = (iconGroup: string, title = 'Advent') => ({
+      date: '2026-12-01',
+      title,
+      color: '#e53935',
+      icon: 'lucideCake',
+      iconGroup,
+    });
+
+    const addAppointmentThroughDialog = async (result: unknown) => {
+      const open = stubDialog(result);
+      fixture.nativeElement.querySelector('[data-testid="add-appointment"]').click();
+      await settle(fixture);
+      const [, config] = open.mock.calls[0]!;
+      open.mockRestore();
+      return (config as { context: AppointmentDialogContext }).context;
+    };
+
+    it('opens the first new appointment without a remembered group', async () => {
+      await render();
+
+      const context = await addAppointmentThroughDialog(undefined);
+
+      expect(context.iconGroup).toBeUndefined();
+    });
+
+    it('opens the next new appointment on the group used for the last one', async () => {
+      await render();
+      await addAppointmentThroughDialog(saved('Celebrations'));
+
+      const context = await addAppointmentThroughDialog(undefined);
+
+      expect(context.iconGroup).toBe('Celebrations');
+    });
+
+    it('also remembers the group used when editing', async () => {
+      await addAppointment('2026-12-01', 'Advent');
+      await render();
+      stubDialog(saved('Travel & seasons', 'Renamed'));
+      fixture.nativeElement.querySelector('[aria-label="Edit Advent"]').click();
+      await settle(fixture);
+      vi.restoreAllMocks();
+
+      const context = await addAppointmentThroughDialog(undefined);
+
+      expect(context.iconGroup).toBe('Travel & seasons');
+    });
+
+    it('does not store the group with the appointment', async () => {
+      await render();
+
+      await addAppointmentThroughDialog(saved('Celebrations'));
+
+      const [stored] = await repository.listAppointments(countdownId);
+      expect(stored).not.toHaveProperty('iconGroup');
+    });
+
+    it('starts on the first group again once another countdown is opened', async () => {
+      const other = await repository.createCountdown({ date: '2027-06-01' });
+      await render();
+      await addAppointmentThroughDialog(saved('Celebrations'));
+      fixture.componentRef.setInput('id', String(other));
+      await settle(fixture);
+      fixture.componentRef.setInput('id', String(countdownId));
+      await settle(fixture);
+
+      const context = await addAppointmentThroughDialog(undefined);
+
+      expect(context.iconGroup).toBeUndefined();
+    });
   });
 
   it('reports the invariant violation when the dialog returns a date on the target day', async () => {

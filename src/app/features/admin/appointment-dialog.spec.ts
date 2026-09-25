@@ -97,6 +97,7 @@ describe('AppointmentDialog', () => {
       date: '2026-12-01',
       color: '#e53935',
       icon: 'lucideStar',
+      iconGroup: 'General',
     });
   });
 
@@ -236,6 +237,30 @@ describe('AppointmentDialog', () => {
       pickGroup(fixture, 'Travel & seasons');
 
       expect(internals(fixture).form.getRawValue().icon).toBe('lucideCake');
+    });
+
+    it('opens a new appointment on the group the caller remembered', () => {
+      const fixture = render({ targetDate: '2026-12-24', iconGroup: 'Celebrations' });
+
+      expect(groupSelect(fixture).value).toBe('Celebrations');
+      expect(labels(fixture)).toContain('Cake');
+    });
+
+    it("opens an existing appointment on its icon's group, not the remembered one", () => {
+      const fixture = render({ ...editing('lucidePawPrint'), iconGroup: 'Celebrations' });
+
+      expect(groupSelect(fixture).value).toBe('Health & sport');
+    });
+
+    it('returns the group shown on saving, so the caller can remember it', () => {
+      const fixture = render(editing('lucideStar'));
+
+      pickGroup(fixture, 'Travel & seasons');
+      submit(fixture);
+
+      expect(close).toHaveBeenCalledWith(
+        expect.objectContaining({ iconGroup: 'Travel & seasons' }),
+      );
     });
 
     it('opens an icon that is no longer offered on the first group', () => {

@@ -207,7 +207,10 @@ The generator also registers the `@spartan-ng/helm/<name>` path alias in `tsconf
 ## Adding an icon
 
 Appointment icons are Lucide names, offered in six groups of 20 to 30 that the appointment
-form switches between with a dropdown. To offer another one, add it with its label and group
+form switches between with a dropdown. Editing opens on the group of the appointment's icon.
+A new appointment opens on the group used when the last one was saved in the same countdown,
+or on the first group; opening another countdown forgets it. That memory lives in
+[`RememberedIconGroup`](src/app/features/admin/remembered-icon-group.ts), in memory only. To offer another one, add it with its label and group
 to `APPOINTMENT_ICONS` in
 [`src/app/shared/appointment-style.ts`](src/app/shared/appointment-style.ts), then run
 
