@@ -15,4 +15,9 @@ export class NotificationService {
   error(message: string): void {
     toast.error(message);
   }
+
+  /** Stays until the user presses the button, which closes it and runs `onClick`. */
+  action(message: string, label: string, onClick: () => void): void {
+    toast.info(message, { duration: Infinity, action: { label, onClick } });
+  }
 }
