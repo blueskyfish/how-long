@@ -50,7 +50,7 @@ src/app/
     data/         Dexie schema (db.ts) and CountdownRepository
     services/     date-utils.ts, backup.service.ts
   features/
-    home/         the countdown page and its "all appointments" overlay
+    home/         the countdown page, its day-counter circle and "all appointments" overlay
     admin/        overview, detail, and the create/edit dialogs
   shared/         appointment list, palette, dialogs, file and toast services
   ui/             Spartan helm components, generated — see "Regenerating" below

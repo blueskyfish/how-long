@@ -8,6 +8,7 @@ import { of, switchMap } from 'rxjs';
 import { CountdownRepository } from '../../core/data/countdown-repository';
 import { daysUntil, toIsoDate } from '../../core/services/date-utils';
 import { AppointmentList } from '../../shared/appointment-list';
+import { DayCounter } from './day-counter';
 import { openDialog } from '../../shared/dialog';
 import { AllAppointmentsDialog, AllAppointmentsDialogContext } from './all-appointments-dialog';
 
@@ -17,24 +18,13 @@ const PREVIEW_COUNT = 5;
 @Component({
   selector: 'app-home-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AppointmentList, HlmButton, NgIcon, RouterLink],
+  imports: [AppointmentList, DayCounter, HlmButton, NgIcon, RouterLink],
   template: `
     <main
       class="mx-auto flex min-h-dvh w-full max-w-md flex-col px-safe-6 pt-safe-16 pb-safe-28 text-center"
     >
       @if (countdown(); as active) {
-        <p
-          class="text-8xl leading-none font-extralight tracking-tight tabular-nums"
-          data-testid="day-count"
-        >
-          {{ dayCount() }}
-        </p>
-        <p
-          class="text-muted-foreground mt-2 text-sm tracking-widest uppercase"
-          data-testid="day-label"
-        >
-          {{ dayLabel() }}
-        </p>
+        <app-day-counter [days]="daysRemaining()" />
         <p class="mt-6 font-mono text-xl tabular-nums" data-testid="target-date">
           {{ active.date }}
         </p>
@@ -104,24 +94,10 @@ export class HomePage {
     { initialValue: [] },
   );
 
-  protected readonly dayCount = computed(() => {
+  /** Signed: negative once the target date has passed. */
+  protected readonly daysRemaining = computed(() => {
     const active = this.countdown();
-    return active ? Math.abs(daysUntil(active.date, this.today)) : 0;
-  });
-
-  protected readonly dayLabel = computed(() => {
-    const active = this.countdown();
-    if (!active) {
-      return '';
-    }
-    const remaining = daysUntil(active.date, this.today);
-    if (remaining === 0) {
-      return 'today';
-    }
-    if (remaining < 0) {
-      return remaining === -1 ? 'day ago' : 'days ago';
-    }
-    return remaining === 1 ? 'day to go' : 'days to go';
+    return active ? daysUntil(active.date, this.today) : 0;
   });
 
   /** Only appointments that are still ahead, capped at {@link PREVIEW_COUNT}. */
