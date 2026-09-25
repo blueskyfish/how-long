@@ -126,11 +126,20 @@ export class HomePage {
     this.countdowns().find((countdown) => `${countdown.id}` === this.countdown()),
   );
 
-  protected readonly active = computed(() => {
-    const countdowns = this.countdowns();
-    const remembered = countdowns.find((countdown) => countdown.id === this.remembered.id());
-    return this.fromUrl() ?? remembered ?? pickNextCountdown(countdowns, this.today);
+  /**
+   * The countdown remembered from an earlier pick, as long as its date has not
+   * passed — the target day itself still counts. Once it has, the page moves on
+   * to the next one due rather than counting upwards.
+   */
+  private readonly rememberedAhead = computed(() => {
+    const countdown = this.countdowns().find(({ id }) => id === this.remembered.id());
+    return countdown && daysUntil(countdown.date, this.today) >= 0 ? countdown : undefined;
   });
+
+  protected readonly active = computed(
+    () =>
+      this.fromUrl() ?? this.rememberedAhead() ?? pickNextCountdown(this.countdowns(), this.today),
+  );
 
   /** Re-queried whenever the shown countdown changes. */
   protected readonly appointments = toSignal(

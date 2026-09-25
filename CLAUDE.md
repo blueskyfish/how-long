@@ -49,7 +49,8 @@ the hash location strategy (`#/admin/3`), so the build can be served from any pa
   DST cannot cause off-by-one). Which countdown the start page shows is decided by
   `pickNextCountdown` in `core/services/next-countdown.ts`; a user's choice is kept in the
   `countdown` query parameter, bound as a component input, and remembered in `localStorage`
-  by `features/home/remembered-countdown.ts` (query parameter → remembered → next due).
+  by `features/home/remembered-countdown.ts` (query parameter → remembered, unless its date
+  has passed → next due).
   Specs provide `COUNTDOWN_STORAGE` with `memoryStorage()` from `src/testing/storage.ts`.
 - **Backup** — `core/services/backup.service.ts` validates a whole file before writing and
   restores in a single transaction; database ids are not exported.
