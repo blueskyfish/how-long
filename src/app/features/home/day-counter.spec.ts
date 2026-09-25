@@ -74,4 +74,21 @@ describe('DayCounter', () => {
       'font-bold',
     );
   });
+
+  it('stays calm by default', () => {
+    render(2);
+
+    expect(circle().hasAttribute('data-urgent')).toBe(false);
+  });
+
+  it('turns the rim red and glows when urgent', () => {
+    fixture = TestBed.createComponent(DayCounter);
+    fixture.componentRef.setInput('days', 2);
+    fixture.componentRef.setInput('urgent', true);
+    fixture.detectChanges();
+
+    expect(circle().hasAttribute('data-urgent')).toBe(true);
+    expect(circle().className).toContain('data-urgent:border-destructive/40');
+    expect(circle().className).toContain('data-urgent:shadow-');
+  });
 });

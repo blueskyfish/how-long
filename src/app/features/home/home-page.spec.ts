@@ -97,6 +97,54 @@ describe('HomePage', () => {
     expect(text('day-label')).toBe('days ago');
   });
 
+  describe('when the target date is close', () => {
+    const isUrgent = () => ({
+      page: (fixture.nativeElement as HTMLElement).hasAttribute('data-urgent'),
+      circle: fixture.nativeElement
+        .querySelector('[data-testid="day-circle"]')
+        .hasAttribute('data-urgent'),
+    });
+
+    it.each([3, 1, 0])('tints the page and lights the circle %i day(s) before', async (days) => {
+      await repository.createCountdown({ date: inDays(days) });
+
+      await render();
+
+      expect(isUrgent()).toEqual({ page: true, circle: true });
+    });
+
+    it('stays calm four days before', async () => {
+      await repository.createCountdown({ date: inDays(4) });
+
+      await render();
+
+      expect(isUrgent()).toEqual({ page: false, circle: false });
+    });
+
+    it('stays calm once the date has passed', async () => {
+      await repository.createCountdown({ date: inDays(-1) });
+
+      await render();
+
+      expect(isUrgent()).toEqual({ page: false, circle: false });
+    });
+
+    it('follows the countdown picked in the URL', async () => {
+      await repository.createCountdown({ date: inDays(2) });
+      const later = await repository.createCountdown({ date: inDays(30) });
+
+      await render(later);
+
+      expect(isUrgent()).toEqual({ page: false, circle: false });
+    });
+  });
+
+  it('keeps the page calm when the database is empty', async () => {
+    await render();
+
+    expect((fixture.nativeElement as HTMLElement).hasAttribute('data-urgent')).toBe(false);
+  });
+
   it('prompts to create a countdown when the database is empty', async () => {
     await render();
 
