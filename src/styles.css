@@ -171,6 +171,21 @@
   padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
 }
 
+/*
+ * iOS Safari zooms into a focused field whose text is smaller than 16px and
+ * leaves the page zoomed once the field is dismissed. The helm input drops to
+ * `text-sm` from the `md` breakpoint, which a phone in landscape already
+ * reaches, so touch screens keep every field at 16px. Unlayered, so it wins
+ * over that utility without `!important`.
+ */
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
