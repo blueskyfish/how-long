@@ -23,29 +23,31 @@ import { CountdownDialog, CountdownDialogContext, CountdownDialogResult } from '
   imports: [HlmButton, NgIcon, RouterLink],
   template: `
     <header
-      class="bg-background/80 border-border sticky top-0 z-10 flex h-14 items-center gap-2 border-b px-3 backdrop-blur"
+      class="bg-background/80 border-border sticky top-0 z-10 border-b px-safe-3 pt-safe-0 backdrop-blur"
     >
-      <a hlmBtn variant="ghost" size="icon" routerLink="/admin" aria-label="Back to overview">
-        <ng-icon name="lucideArrowLeft" class="text-lg" />
-      </a>
-      <h1 class="font-mono text-base tabular-nums" data-testid="target-date">
-        {{ countdown()?.date ?? '…' }}
-      </h1>
-      <span class="flex-1"></span>
-      @if (countdown()) {
-        <button
-          hlmBtn
-          variant="ghost"
-          size="icon"
-          (click)="editCountdown()"
-          aria-label="Edit countdown"
-        >
-          <ng-icon name="lucidePencil" class="text-lg" />
-        </button>
-      }
+      <div class="flex h-14 items-center gap-2">
+        <a hlmBtn variant="ghost" size="icon" routerLink="/admin" aria-label="Back to overview">
+          <ng-icon name="lucideArrowLeft" class="text-lg" />
+        </a>
+        <h1 class="font-mono text-base tabular-nums" data-testid="target-date">
+          {{ countdown()?.date ?? '…' }}
+        </h1>
+        <span class="flex-1"></span>
+        @if (countdown()) {
+          <button
+            hlmBtn
+            variant="ghost"
+            size="icon"
+            (click)="editCountdown()"
+            aria-label="Edit countdown"
+          >
+            <ng-icon name="lucidePencil" class="text-lg" />
+          </button>
+        }
+      </div>
     </header>
 
-    <main class="mx-auto w-full max-w-2xl px-4 pt-4 pb-28">
+    <main class="mx-auto w-full max-w-2xl px-safe-4 pt-4 pb-safe-28">
       @if (countdown(); as active) {
         @if (active.description) {
           <p class="text-muted-foreground px-1 pb-3 text-sm">{{ active.description }}</p>
@@ -105,7 +107,7 @@ import { CountdownDialog, CountdownDialogContext, CountdownDialogResult } from '
       <button
         hlmBtn
         size="icon-lg"
-        class="fixed right-6 bottom-6 rounded-full shadow-lg"
+        class="fixed right-safe-6 bottom-safe-6 rounded-full shadow-lg"
         aria-label="New appointment"
         (click)="createAppointment()"
         data-testid="add-appointment"

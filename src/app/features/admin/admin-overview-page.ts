@@ -25,34 +25,36 @@ import { CountdownDialog, CountdownDialogContext, CountdownDialogResult } from '
   },
   template: `
     <header
-      class="bg-background/80 border-border sticky top-0 z-10 flex h-14 items-center gap-2 border-b px-3 backdrop-blur"
+      class="bg-background/80 border-border sticky top-0 z-10 border-b px-safe-3 pt-safe-0 backdrop-blur"
     >
-      <a hlmBtn variant="ghost" size="icon" routerLink="/" aria-label="Back to countdown">
-        <ng-icon name="lucideArrowLeft" class="text-lg" />
-      </a>
-      <h1 class="text-base font-medium">Countdowns</h1>
-      <span class="flex-1"></span>
-      <button
-        hlmBtn
-        variant="ghost"
-        size="icon"
-        (click)="backups.export()"
-        aria-label="Export as JSON"
-      >
-        <ng-icon name="lucideDownload" class="text-lg" />
-      </button>
-      <button
-        hlmBtn
-        variant="ghost"
-        size="icon"
-        (click)="backups.importFromPicker()"
-        aria-label="Import from JSON"
-      >
-        <ng-icon name="lucideUpload" class="text-lg" />
-      </button>
+      <div class="flex h-14 items-center gap-2">
+        <a hlmBtn variant="ghost" size="icon" routerLink="/" aria-label="Back to countdown">
+          <ng-icon name="lucideArrowLeft" class="text-lg" />
+        </a>
+        <h1 class="text-base font-medium">Countdowns</h1>
+        <span class="flex-1"></span>
+        <button
+          hlmBtn
+          variant="ghost"
+          size="icon"
+          (click)="backups.export()"
+          aria-label="Export as JSON"
+        >
+          <ng-icon name="lucideDownload" class="text-lg" />
+        </button>
+        <button
+          hlmBtn
+          variant="ghost"
+          size="icon"
+          (click)="backups.importFromPicker()"
+          aria-label="Import from JSON"
+        >
+          <ng-icon name="lucideUpload" class="text-lg" />
+        </button>
+      </div>
     </header>
 
-    <main class="mx-auto w-full max-w-2xl px-4 pt-4 pb-28">
+    <main class="mx-auto w-full max-w-2xl px-safe-4 pt-4 pb-safe-28">
       <ul class="m-0 flex list-none flex-col gap-2 p-0">
         @for (countdown of countdowns(); track countdown.id) {
           <li class="border-border bg-card flex items-center gap-2 rounded-xl border pr-2">
@@ -95,7 +97,7 @@ import { CountdownDialog, CountdownDialogContext, CountdownDialogResult } from '
 
     @if (dragging()) {
       <div
-        class="border-primary bg-background/90 pointer-events-none fixed inset-4 z-20 flex items-center justify-center rounded-2xl border-2 border-dashed text-lg"
+        class="border-primary bg-background/90 pointer-events-none fixed top-safe-4 right-safe-4 bottom-safe-4 left-safe-4 z-20 flex items-center justify-center rounded-2xl border-2 border-dashed text-lg"
       >
         Drop a JSON backup to import
       </div>
@@ -104,7 +106,7 @@ import { CountdownDialog, CountdownDialogContext, CountdownDialogResult } from '
     <button
       hlmBtn
       size="icon-lg"
-      class="fixed right-6 bottom-6 rounded-full shadow-lg"
+      class="fixed right-safe-6 bottom-safe-6 rounded-full shadow-lg"
       aria-label="New countdown"
       (click)="create()"
       data-testid="add-countdown"

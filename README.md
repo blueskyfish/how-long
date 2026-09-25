@@ -77,6 +77,26 @@ Day counts are computed from UTC midnights in
 [`date-utils.ts`](src/app/core/services/date-utils.ts), so a daylight saving transition in
 the range cannot produce an off-by-one.
 
+### Safe areas
+
+`index.html` sets `viewport-fit=cover`, so on an iPhone the page paints behind the notch,
+the rounded corners and the home indicator. Every edge-anchored element therefore has to
+keep clear of those strips itself.
+
+The four insets are mirrored from `env(safe-area-inset-*)` into `--safe-top` / `--safe-bottom`
+/ `--safe-left` / `--safe-right` in [`src/styles.css`](src/styles.css), and a set of
+utilities layers them on top of the design's own spacing: `pt-safe-16` reads as "pt-16, plus
+whatever the notch needs", `px-safe-6` as "px-6, or the side inset if that is larger".
+`bottom-safe-6` and `right-safe-6` position the floating action buttons, and the CDK overlay
+wrapper is padded so a dialog is centred within the safe area rather than the raw viewport.
+
+Because the values come from variables rather than from `env()` at each use site, a browser
+without a notch can exercise the whole layout by overriding the four of them:
+
+```js
+document.documentElement.style.setProperty('--safe-top', '59px');
+```
+
 ### Which countdown does the start page show?
 
 The earliest countdown that has not passed — today counts as "not passed". If every target

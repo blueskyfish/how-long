@@ -8,6 +8,18 @@
  * `dark:` variant keys off.
  */
 :root {
+  /*
+   * `viewport-fit=cover` in index.html lets the page paint behind an iPhone's
+   * notch, its rounded corners and the home indicator, so every edge-anchored
+   * element has to keep clear of them itself. Mirrored into variables (rather
+   * than calling env() at each use site) so the whole layout can be exercised
+   * on a device without a notch by overriding these four values.
+   */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
   --radius: 0.625rem;
 
   --background: oklch(0.99 0.004 250);
@@ -107,6 +119,50 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+}
+
+/*
+ * Safe-area utilities. Each mirrors the Tailwind spacing utility of the same
+ * name and adds the matching inset, so `pb-safe-28` reads as "pb-28, plus
+ * whatever the home indicator needs". The `*-safe-0` forms give the bare inset.
+ */
+@utility pt-safe-* {
+  padding-top: calc(--spacing(--value(integer)) + var(--safe-top));
+}
+
+@utility pb-safe-* {
+  padding-bottom: calc(--spacing(--value(integer)) + var(--safe-bottom));
+}
+
+/* Side gutters never fall inside a rounded corner or a landscape notch. */
+@utility px-safe-* {
+  padding-inline-start: max(--spacing(--value(integer)), var(--safe-left));
+  padding-inline-end: max(--spacing(--value(integer)), var(--safe-right));
+}
+
+@utility top-safe-* {
+  inset-block-start: calc(--spacing(--value(integer)) + var(--safe-top));
+}
+
+@utility bottom-safe-* {
+  inset-block-end: calc(--spacing(--value(integer)) + var(--safe-bottom));
+}
+
+@utility left-safe-* {
+  inset-inline-start: calc(--spacing(--value(integer)) + var(--safe-left));
+}
+
+@utility right-safe-* {
+  inset-inline-end: calc(--spacing(--value(integer)) + var(--safe-right));
+}
+
+/*
+ * Overlays are positioned by the CDK against the full viewport, which on a
+ * notched phone includes the unsafe strips. Padding the wrapper keeps a tall
+ * dialog inside the safe area without affecting how it is centred.
+ */
+.cdk-global-overlay-wrapper {
+  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
 }
 
 @layer base {

@@ -13,7 +13,12 @@ export function openDialog<TResult, TContext extends object>(
 ): Promise<TResult | undefined> {
   const ref = service.open<TResult, TContext>(component, {
     context,
-    contentClass: 'sm:max-w-lg',
+    // A tall form (the appointment dialog, say) must scroll rather than run off
+    // a phone screen. The cap is measured against the viewport minus the safe
+    // areas: `max-h-full` would resolve against the CDK's auto-height panes and
+    // therefore be ignored.
+    contentClass:
+      'sm:max-w-lg max-h-[calc(100dvh-var(--safe-top)-var(--safe-bottom)-2rem)] overflow-y-auto',
   });
   return firstValueFrom(ref.closed$);
 }

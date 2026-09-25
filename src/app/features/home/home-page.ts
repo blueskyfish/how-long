@@ -19,7 +19,9 @@ const PREVIEW_COUNT = 5;
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [AppointmentList, HlmButton, NgIcon, RouterLink],
   template: `
-    <main class="mx-auto flex min-h-dvh w-full max-w-md flex-col px-6 pt-16 pb-28 text-center">
+    <main
+      class="mx-auto flex min-h-dvh w-full max-w-md flex-col px-safe-6 pt-safe-16 pb-safe-28 text-center"
+    >
       @if (countdown(); as active) {
         <p
           class="text-8xl leading-none font-extralight tracking-tight tabular-nums"
@@ -74,7 +76,7 @@ const PREVIEW_COUNT = 5;
       size="icon-lg"
       routerLink="/admin"
       aria-label="Administration"
-      class="fixed right-6 bottom-6 rounded-full shadow-lg"
+      class="fixed right-safe-6 bottom-safe-6 rounded-full shadow-lg"
       data-testid="admin-fab"
     >
       <ng-icon name="lucideSettings" class="text-lg" />

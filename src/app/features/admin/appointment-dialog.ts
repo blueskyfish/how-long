@@ -97,7 +97,7 @@ export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'colo
 
         <div class="grid gap-2">
           <span hlmLabel>Icon</span>
-          <div class="grid grid-cols-10 gap-1" role="radiogroup" aria-label="Icon">
+          <div class="grid grid-cols-5 gap-1 sm:grid-cols-10" role="radiogroup" aria-label="Icon">
             @for (icon of icons; track icon.value) {
               <button
                 type="button"
