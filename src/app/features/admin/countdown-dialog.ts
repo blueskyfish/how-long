@@ -40,6 +40,7 @@ export type CountdownDialogResult = Pick<Countdown, 'date' | 'description'>;
             hlmInput
             id="countdown-date"
             type="date"
+            class="appearance-none"
             (input)="dateTouched.set(true)"
             formControlName="date"
             required

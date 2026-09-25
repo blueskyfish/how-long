@@ -64,6 +64,7 @@ export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'colo
             hlmInput
             id="appointment-date"
             type="date"
+            class="appearance-none"
             (input)="dateTouched.set(true)"
             [max]="maxDate"
             formControlName="date"
