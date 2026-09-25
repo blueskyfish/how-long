@@ -147,6 +147,12 @@ writes it to the `countdown` query parameter (`#/?countdown=3`), which is bound 
 into the page as a component input: the choice survives a reload, the back button steps
 through it, and a parameter naming a deleted countdown falls back to the default.
 
+The pick is also remembered in `localStorage`, so reopening the app without the parameter —
+from the home screen, for instance — shows the same countdown again. The order is: the query
+parameter, then the remembered pick, then the next countdown due. A remembered countdown
+that has since been deleted is skipped. The pick is a per-device preference and is not part
+of the backup.
+
 ### Backup format
 
 ```json

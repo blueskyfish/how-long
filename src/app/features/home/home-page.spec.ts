@@ -9,13 +9,16 @@ import { HOW_LONG_DB, HowLongDatabase } from '../../core/data/db';
 import { toIsoDate } from '../../core/services/date-utils';
 import { APP_ICONS } from '../../shared/icons';
 import { settle } from '../../../testing/settle';
+import { memoryStorage } from '../../../testing/storage';
 import { CountdownPicker } from './countdown-picker';
 import { HomePage } from './home-page';
+import { COUNTDOWN_STORAGE } from './remembered-countdown';
 
 describe('HomePage', () => {
   let db: HowLongDatabase;
   let repository: CountdownRepository;
   let fixture: ComponentFixture<HomePage>;
+  let storage: Storage;
 
   const today = new Date();
   const inDays = (days: number) =>
@@ -26,9 +29,11 @@ describe('HomePage', () => {
 
   beforeEach(async () => {
     db = new HowLongDatabase(`how-long-home-${crypto.randomUUID()}`);
+    storage = memoryStorage();
     TestBed.configureTestingModule({
       providers: [
         { provide: HOW_LONG_DB, useValue: db },
+        { provide: COUNTDOWN_STORAGE, useValue: storage },
         provideRouter([]),
         provideIcons(APP_ICONS),
       ],
@@ -222,6 +227,65 @@ describe('HomePage', () => {
     expect(
       fixture.nativeElement.querySelector('[data-testid="admin-fab"]').getAttribute('href'),
     ).toBe('/admin');
+  });
+
+  describe('remembering the pick', () => {
+    /** A new page instance, as after reopening the app without a query parameter. */
+    async function reopen(): Promise<void> {
+      fixture.destroy();
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          { provide: HOW_LONG_DB, useValue: db },
+          { provide: COUNTDOWN_STORAGE, useValue: storage },
+          provideRouter([]),
+          provideIcons(APP_ICONS),
+        ],
+      });
+      await render();
+    }
+
+    it('shows the picked countdown again after reopening the app', async () => {
+      await repository.createCountdown({ date: inDays(10), description: 'Sooner' });
+      const later = await repository.createCountdown({ date: inDays(60), description: 'Later' });
+      await render(later);
+
+      await reopen();
+
+      expect(text('description')).toBe('Later');
+    });
+
+    it('shows the next countdown due while nothing has been picked', async () => {
+      await repository.createCountdown({ date: inDays(60), description: 'Later' });
+      await repository.createCountdown({ date: inDays(10), description: 'Sooner' });
+
+      await render();
+
+      expect(text('description')).toBe('Sooner');
+      expect(storage.length).toBe(0);
+    });
+
+    it('lets the query parameter win over the remembered pick', async () => {
+      const sooner = await repository.createCountdown({ date: inDays(10), description: 'Sooner' });
+      const later = await repository.createCountdown({ date: inDays(60), description: 'Later' });
+      await render(later);
+      fixture.destroy();
+
+      await render(sooner);
+
+      expect(text('description')).toBe('Sooner');
+    });
+
+    it('falls back to the next countdown once the remembered one is deleted', async () => {
+      await repository.createCountdown({ date: inDays(10), description: 'Sooner' });
+      const later = await repository.createCountdown({ date: inDays(60), description: 'Later' });
+      await render(later);
+      await repository.deleteCountdown(later);
+
+      await reopen();
+
+      expect(text('description')).toBe('Sooner');
+    });
   });
 
   describe('switching between countdowns', () => {

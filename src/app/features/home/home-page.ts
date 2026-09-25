@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
@@ -14,6 +14,7 @@ import { openDialog } from '../../shared/dialog';
 import { AllAppointmentsDialog, AllAppointmentsDialogContext } from './all-appointments-dialog';
 import { CountdownPicker } from './countdown-picker';
 import { DayCounter } from './day-counter';
+import { RememberedCountdown } from './remembered-countdown';
 
 /** Number of appointments shown before the "more" overlay is offered. */
 const PREVIEW_COUNT = 5;
@@ -106,23 +107,29 @@ export class HomePage {
   /**
    * Bound from the `countdown` query parameter, so the pick survives a reload and
    * the back button steps through it. Unset — or pointing at a countdown that has
-   * since been deleted — falls back to the next one due.
+   * since been deleted — falls back to the remembered pick, then the next one due.
    */
   readonly countdown = input<string>();
 
   private readonly repository = inject(CountdownRepository);
   private readonly dialog = inject(HlmDialogService);
   private readonly router = inject(Router);
+  private readonly remembered = inject(RememberedCountdown);
 
   /** Captured once so the rendered day count stays stable while the page is open. */
   private readonly today = new Date();
 
   protected readonly countdowns = toSignal(this.repository.watchCountdowns(), { initialValue: [] });
 
+  /** The countdown named by the query parameter, if it still exists. */
+  private readonly fromUrl = computed(() =>
+    this.countdowns().find((countdown) => `${countdown.id}` === this.countdown()),
+  );
+
   protected readonly active = computed(() => {
     const countdowns = this.countdowns();
-    const picked = countdowns.find((countdown) => `${countdown.id}` === this.countdown());
-    return picked ?? pickNextCountdown(countdowns, this.today);
+    const remembered = countdowns.find((countdown) => countdown.id === this.remembered.id());
+    return this.fromUrl() ?? remembered ?? pickNextCountdown(countdowns, this.today);
   });
 
   /** Re-queried whenever the shown countdown changes. */
@@ -156,6 +163,16 @@ export class HomePage {
   protected readonly preview = computed(() => this.upcoming().slice(0, PREVIEW_COUNT));
 
   protected readonly hasMore = computed(() => this.appointments().length > this.preview().length);
+
+  constructor() {
+    // A pick always passes through the URL, so this also covers the dropdown.
+    effect(() => {
+      const id = this.fromUrl()?.id;
+      if (id !== undefined) {
+        this.remembered.remember(id);
+      }
+    });
+  }
 
   protected select(countdown: Countdown): void {
     this.router.navigate([], { queryParams: { countdown: countdown.id } });
