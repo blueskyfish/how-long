@@ -1,10 +1,20 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DOCUMENT,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmDialogService } from '@spartan-ng/helm/dialog';
-import { of, switchMap } from 'rxjs';
+import { filter, fromEvent, merge, of, switchMap } from 'rxjs';
 import { CountdownRepository } from '../../core/data/countdown-repository';
 import { Countdown } from '../../core/models';
 import { daysUntil, toIsoDate } from '../../core/services/date-utils';
@@ -14,6 +24,7 @@ import { openDialog } from '../../shared/dialog';
 import { AllAppointmentsDialog, AllAppointmentsDialogContext } from './all-appointments-dialog';
 import { CountdownPicker } from './countdown-picker';
 import { DayCounter } from './day-counter';
+import { PULL_THRESHOLD_PX, PullToRefresh } from './pull-to-refresh';
 import { RememberedCountdown } from './remembered-countdown';
 
 /** Number of appointments shown before the "more" overlay is offered. */
@@ -26,12 +37,37 @@ const URGENT_WITHIN_DAYS = 3;
   selector: 'app-home-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [AppointmentList, CountdownPicker, DayCounter, HlmButton, NgIcon, RouterLink],
+  hostDirectives: [PullToRefresh],
   host: {
     // On the host rather than <main>, so the tint spans the whole viewport, notch included.
     class: 'data-urgent:bg-destructive/10 block min-h-dvh transition-colors duration-700',
     '[attr.data-urgent]': "urgent() ? '' : null",
   },
   template: `
+    <!--
+      Follows the finger down from under the top edge while the page is pulled,
+      turning with it, and slides back once released.
+    -->
+    <div
+      class="top-safe-0 pointer-events-none fixed inset-x-0 z-10 flex justify-center transition-[transform,opacity] duration-300"
+      [style.transition]="pull.distance() === 0 ? null : 'none'"
+      [class.opacity-0]="pull.distance() === 0"
+      [style.transform]="'translateY(' + (pull.distance() - 48) + 'px)'"
+      aria-hidden="true"
+      data-testid="pull-indicator"
+    >
+      <span
+        class="bg-card text-primary flex size-10 items-center justify-center rounded-full border shadow-md transition-opacity"
+        [class.opacity-50]="!pull.armed()"
+      >
+        <ng-icon
+          name="lucideRefreshCw"
+          class="text-lg"
+          [style.transform]="'rotate(' + pullRotation() + 'deg)'"
+        />
+      </span>
+    </div>
+
     <!--
       Sideways on a phone there is no vertical room to stack, so the two blocks
       sit side by side: the counter on the right, the appointments on the left.
@@ -44,7 +80,12 @@ const URGENT_WITHIN_DAYS = 3;
     >
       @if (active(); as countdown) {
         <div class="landscape-phone:min-w-0 landscape-phone:flex-1">
-          <app-day-counter [days]="daysRemaining()" [urgent]="urgent()" />
+          <app-day-counter
+            [days]="daysRemaining()"
+            [urgent]="urgent()"
+            (dblclick)="refresh()"
+            title="Double-click to refresh"
+          />
 
           <div class="landscape-phone:mt-3 mt-6 flex justify-center">
             <app-countdown-picker
@@ -115,9 +156,21 @@ export class HomePage {
   private readonly dialog = inject(HlmDialogService);
   private readonly router = inject(Router);
   private readonly remembered = inject(RememberedCountdown);
+  private readonly document = inject(DOCUMENT);
+  private readonly dayCounter = viewChild(DayCounter);
+  protected readonly pull = inject(PullToRefresh);
 
-  /** Captured once so the rendered day count stays stable while the page is open. */
-  private readonly today = new Date();
+  /**
+   * Held still while the page is open, so the day count does not jump under the
+   * user's eyes; moved on by {@link refresh}. Everything that depends on the
+   * date follows, since the data itself is already live.
+   */
+  private readonly today = signal(new Date());
+
+  /** One full turn of the indicator at the threshold. */
+  protected readonly pullRotation = computed(
+    () => (this.pull.distance() / PULL_THRESHOLD_PX) * 360,
+  );
 
   protected readonly countdowns = toSignal(this.repository.watchCountdowns(), { initialValue: [] });
 
@@ -133,12 +186,14 @@ export class HomePage {
    */
   private readonly rememberedAhead = computed(() => {
     const countdown = this.countdowns().find(({ id }) => id === this.remembered.id());
-    return countdown && daysUntil(countdown.date, this.today) >= 0 ? countdown : undefined;
+    return countdown && daysUntil(countdown.date, this.today()) >= 0 ? countdown : undefined;
   });
 
   protected readonly active = computed(
     () =>
-      this.fromUrl() ?? this.rememberedAhead() ?? pickNextCountdown(this.countdowns(), this.today),
+      this.fromUrl() ??
+      this.rememberedAhead() ??
+      pickNextCountdown(this.countdowns(), this.today()),
   );
 
   /** Re-queried whenever the shown countdown changes. */
@@ -154,7 +209,7 @@ export class HomePage {
   /** Signed: negative once the target date has passed. */
   protected readonly daysRemaining = computed(() => {
     const countdown = this.active();
-    return countdown ? daysUntil(countdown.date, this.today) : 0;
+    return countdown ? daysUntil(countdown.date, this.today()) : 0;
   });
 
   /** The target date is at most {@link URGENT_WITHIN_DAYS} days away and not yet passed. */
@@ -165,7 +220,7 @@ export class HomePage {
 
   /** Only appointments that are still ahead, capped at {@link PREVIEW_COUNT}. */
   protected readonly upcoming = computed(() => {
-    const isoToday = toIsoDate(this.today);
+    const isoToday = toIsoDate(this.today());
     return this.appointments().filter((appointment) => appointment.date >= isoToday);
   });
 
@@ -181,6 +236,28 @@ export class HomePage {
         this.remembered.remember(id);
       }
     });
+
+    // Asked for: pulled down on a phone or the counter double-clicked.
+    this.pull.refresh.subscribe(() => this.refresh());
+
+    // A home-screen app is resumed rather than reloaded, possibly days later,
+    // and a restored page (back-forward cache) comes back as it was left.
+    merge(
+      fromEvent(this.document, 'visibilitychange').pipe(
+        filter(() => this.document.visibilityState === 'visible'),
+      ),
+      fromEvent<PageTransitionEvent>(this.document.defaultView ?? this.document, 'pageshow').pipe(
+        filter((event) => event.persisted),
+      ),
+    )
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.today.set(new Date()));
+  }
+
+  /** Recounts from the current date and acknowledges it with a pulse of the counter. */
+  protected refresh(): void {
+    this.today.set(new Date());
+    this.dayCounter()?.pulse();
   }
 
   protected select(countdown: Countdown): void {
