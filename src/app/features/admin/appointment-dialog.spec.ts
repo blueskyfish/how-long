@@ -32,13 +32,24 @@ describe('AppointmentDialog', () => {
   const internals = (fixture: ComponentFixture<AppointmentDialog>) =>
     fixture.componentInstance as unknown as { form: any; maxDate: string };
 
+  /** Sets fields of the model directly, for values a native date input would refuse to hold. */
+  const fill = (
+    fixture: ComponentFixture<AppointmentDialog>,
+    values: Partial<Record<'title' | 'date' | 'color' | 'icon', string>>,
+  ) => {
+    const { form } = internals(fixture);
+    for (const [key, value] of Object.entries(values)) {
+      form[key]().value.set(value);
+    }
+  };
+
   const submit = (fixture: ComponentFixture<AppointmentDialog>) =>
     fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit'));
 
   it('defaults to the first colour and icon of the palette', () => {
     const fixture = render({ targetDate: '2026-12-24' });
 
-    expect(internals(fixture).form.getRawValue()).toMatchObject({
+    expect(internals(fixture).form().value()).toMatchObject({
       color: DEFAULT_APPOINTMENT_COLOR,
       icon: DEFAULT_APPOINTMENT_ICON,
     });
@@ -73,7 +84,7 @@ describe('AppointmentDialog', () => {
     });
 
     expect(fixture.nativeElement.textContent).toContain('Edit appointment');
-    expect(internals(fixture).form.getRawValue()).toEqual({
+    expect(internals(fixture).form().value()).toEqual({
       title: 'Advent',
       date: '2026-12-01',
       color: '#e53935',
@@ -83,7 +94,7 @@ describe('AppointmentDialog', () => {
 
   it('closes with a trimmed title', () => {
     const fixture = render({ targetDate: '2026-12-24' });
-    internals(fixture).form.setValue({
+    fill(fixture, {
       title: '  Advent  ',
       date: '2026-12-01',
       color: '#e53935',
@@ -103,7 +114,7 @@ describe('AppointmentDialog', () => {
 
   it('refuses a date on or after the target date', () => {
     const fixture = render({ targetDate: '2026-12-24' });
-    internals(fixture).form.patchValue({ title: 'Too late', date: '2026-12-24' });
+    fill(fixture, { title: 'Too late', date: '2026-12-24' });
 
     submit(fixture);
     fixture.detectChanges();
@@ -125,9 +136,27 @@ describe('AppointmentDialog', () => {
 
   it('is invalid without a title', () => {
     const fixture = render({ targetDate: '2026-12-24' });
-    internals(fixture).form.patchValue({ date: '2026-12-01', title: '' });
+    fill(fixture, { date: '2026-12-01', title: '' });
 
-    expect(internals(fixture).form.invalid).toBe(true);
+    expect(internals(fixture).form().invalid()).toBe(true);
+  });
+
+  it('caps the title at 80 characters', () => {
+    const fixture = render({ targetDate: '2026-12-24' });
+    expect(fixture.nativeElement.querySelector('#appointment-title').maxLength).toBe(80);
+
+    fill(fixture, { title: 'x'.repeat(81), date: '2026-12-01' });
+    submit(fixture);
+
+    expect(close).not.toHaveBeenCalled();
+  });
+
+  it('keeps the date error hidden until the field was touched', () => {
+    const fixture = render({ targetDate: '2026-12-24' });
+    fill(fixture, { date: '2026-12-30' });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="date-error"]')).toBeNull();
   });
 
   it('picks a colour from the swatches', () => {
@@ -136,7 +165,7 @@ describe('AppointmentDialog', () => {
     fixture.nativeElement.querySelector('[aria-label="Red"]').click();
     fixture.detectChanges();
 
-    expect(internals(fixture).form.getRawValue().color).toBe('#e53935');
+    expect(internals(fixture).form().value().color).toBe('#e53935');
   });
 
   it('picks an icon from the grid', () => {
@@ -145,7 +174,7 @@ describe('AppointmentDialog', () => {
     fixture.nativeElement.querySelector('[aria-label="Star"]').click();
     fixture.detectChanges();
 
-    expect(internals(fixture).form.getRawValue().icon).toBe('lucideStar');
+    expect(internals(fixture).form().value().icon).toBe('lucideStar');
   });
 
   it('closes with undefined when cancelled', () => {
@@ -236,7 +265,7 @@ describe('AppointmentDialog', () => {
 
       pickGroup(fixture, 'Travel & seasons');
 
-      expect(internals(fixture).form.getRawValue().icon).toBe('lucideCake');
+      expect(internals(fixture).form().value().icon).toBe('lucideCake');
     });
 
     it('opens a new appointment on the group the caller remembered', () => {
@@ -267,7 +296,7 @@ describe('AppointmentDialog', () => {
       const fixture = render(editing('event'));
 
       expect(groupSelect(fixture).value).toBe('General');
-      expect(internals(fixture).form.getRawValue().icon).toBe('event');
+      expect(internals(fixture).form().value().icon).toBe('event');
     });
   });
 });

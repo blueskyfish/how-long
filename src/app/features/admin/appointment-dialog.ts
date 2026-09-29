@@ -8,7 +8,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormField, FormRoot, form, maxLength, required, validate } from '@angular/forms/signals';
 import { NgIcon } from '@ng-icons/core';
 import { BrnDialogRef, injectBrnDialogContext } from '@spartan-ng/brain/dialog';
 import { HlmButton } from '@spartan-ng/helm/button';
@@ -52,10 +52,11 @@ export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'colo
     HlmInput,
     HlmLabel,
     NgIcon,
-    ReactiveFormsModule,
+    FormField,
+    FormRoot,
   ],
   template: `
-    <form [formGroup]="form" (ngSubmit)="save()" class="grid gap-6">
+    <form [formRoot]="form" (submit)="save()" class="grid gap-6">
       <div hlmDialogHeader>
         <h2 hlmDialogTitle>
           {{ context.appointment ? 'Edit appointment' : 'New appointment' }}
@@ -65,14 +66,7 @@ export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'colo
       <div class="grid gap-4">
         <div class="grid gap-2">
           <label hlmLabel for="appointment-title">Title</label>
-          <input
-            hlmInput
-            id="appointment-title"
-            type="text"
-            maxlength="80"
-            formControlName="title"
-            required
-          />
+          <input hlmInput id="appointment-title" type="text" [formField]="form.title" />
         </div>
 
         <div class="grid gap-2">
@@ -82,13 +76,11 @@ export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'colo
             id="appointment-date"
             type="date"
             class="appearance-none"
-            (input)="dateTouched.set(true)"
             [max]="maxDate"
-            formControlName="date"
-            required
+            [formField]="form.date"
           />
           <p class="text-muted-foreground text-xs">Must be before {{ context.targetDate }}.</p>
-          @if (dateTouched() && form.controls.date.hasError('afterTarget')) {
+          @if (showDateError()) {
             <p class="text-destructive text-sm" data-testid="date-error">
               The date must be before {{ context.targetDate }}.
             </p>
@@ -105,9 +97,9 @@ export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'colo
                 class="size-7 rounded-full outline-offset-2 aria-checked:outline-2"
                 [style.background-color]="color.value"
                 [style.outline-color]="color.value"
-                [attr.aria-checked]="form.controls.color.value === color.value"
+                [attr.aria-checked]="form.color().value() === color.value"
                 [attr.aria-label]="color.name"
-                (click)="form.controls.color.setValue(color.value)"
+                (click)="form.color().value.set(color.value)"
               ></button>
             }
           </div>
@@ -144,10 +136,10 @@ export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'colo
                 type="button"
                 role="radio"
                 class="hover:bg-accent flex size-8 items-center justify-center rounded-md border border-transparent transition-colors focus-visible:outline-none aria-checked:border-current"
-                [style.color]="form.controls.color.value"
-                [attr.aria-checked]="form.controls.icon.value === icon.value"
+                [style.color]="form.color().value()"
+                [attr.aria-checked]="form.icon().value() === icon.value"
                 [attr.aria-label]="icon.name"
-                (click)="form.controls.icon.setValue(icon.value)"
+                (click)="form.icon().value.set(icon.value)"
               >
                 <ng-icon [name]="icon.value" class="text-base" />
               </button>
@@ -160,7 +152,7 @@ export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'colo
         <button hlmBtn variant="outline" type="button" (click)="cancel()" data-testid="cancel">
           Cancel
         </button>
-        <button hlmBtn type="submit" [disabled]="form.invalid" data-testid="save">Save</button>
+        <button hlmBtn type="submit" [disabled]="form().invalid()" data-testid="save">Save</button>
       </div>
     </form>
   `,
@@ -191,22 +183,41 @@ export class AppointmentDialog {
   /** The day before the target date — also fed to the input's `max` attribute. */
   protected readonly maxDate = this.dayBeforeTarget();
 
-  protected readonly form = inject(FormBuilder).nonNullable.group({
-    title: [this.context.appointment?.title ?? '', [Validators.required, Validators.maxLength(80)]],
-    date: [
-      this.context.appointment?.date ?? '',
-      [Validators.required, this.beforeTargetValidator()],
-    ],
-    color: [this.context.appointment?.color ?? DEFAULT_APPOINTMENT_COLOR],
-    icon: [this.context.appointment?.icon ?? DEFAULT_APPOINTMENT_ICON],
+  private readonly model = signal({
+    title: this.context.appointment?.title ?? '',
+    date: this.context.appointment?.date ?? '',
+    color: this.context.appointment?.color ?? DEFAULT_APPOINTMENT_COLOR,
+    icon: this.context.appointment?.icon ?? DEFAULT_APPOINTMENT_ICON,
+  });
+
+  protected readonly form = form(this.model, (path) => {
+    required(path.title);
+    maxLength(path.title, 80);
+    required(path.date);
+    // Mirrors the repository invariant so the user sees the problem before saving.
+    validate(path.date, ({ value }) => {
+      if (!value()) {
+        return null;
+      }
+      if (!isValidIsoDate(value())) {
+        return { kind: 'isoDate' };
+      }
+      return value() < this.context.targetDate ? null : { kind: 'afterTarget' };
+    });
   });
 
   /**
-   * Set as soon as the user types into the date field, or tries to save. Without
-   * it a rejected date would show up only as a disabled Save button with no
-   * explanation, since `touched` alone waits for the field to lose focus.
+   * A rejected date is explained as soon as the user types into the field, or
+   * tries to save. Without it the problem would show up only as a disabled Save
+   * button with no explanation, since `touched` alone waits for the field to
+   * lose focus.
    */
-  protected readonly dateTouched = signal(false);
+  protected readonly showDateError = computed(() => {
+    const date = this.form.date();
+    return (
+      (date.dirty() || date.touched()) && date.errors().some(({ kind }) => kind === 'afterTarget')
+    );
+  });
 
   constructor() {
     // When editing, the current icon may sit below the rows that are visible.
@@ -225,11 +236,11 @@ export class AppointmentDialog {
   }
 
   protected save(): void {
-    this.dateTouched.set(true);
-    if (this.form.invalid) {
+    this.form().markAsTouched();
+    if (this.form().invalid()) {
       return;
     }
-    const { title, date, color, icon } = this.form.getRawValue();
+    const { title, date, color, icon } = this.model();
     this.dialogRef.close({ title: title.trim(), date, color, icon, iconGroup: this.iconGroup() });
   }
 
@@ -243,18 +254,5 @@ export class AppointmentDialog {
       return '';
     }
     return toIsoDate(new Date(target.getFullYear(), target.getMonth(), target.getDate() - 1));
-  }
-
-  /** Mirrors the repository invariant so the user sees the problem before saving. */
-  private beforeTargetValidator() {
-    return (control: { value: string }) => {
-      if (!control.value) {
-        return null;
-      }
-      if (!isValidIsoDate(control.value)) {
-        return { isoDate: true };
-      }
-      return control.value < this.context.targetDate ? null : { afterTarget: true };
-    };
   }
 }
