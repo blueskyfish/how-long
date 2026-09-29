@@ -74,8 +74,8 @@
     "titleEdit": "Termin bearbeiten",
     "title": "Titel",
     "date": "Datum",
-    "dateHint": "Muss vor dem {{date}} liegen.",
-    "dateError": "Das Datum muss vor dem {{date}} liegen.",
+    "dateHint": "Muss am {{date}} oder früher liegen.",
+    "dateError": "Das Datum darf nicht nach dem {{date}} liegen.",
     "colour": "Farbe",
     "icon": "Symbol",
     "iconGroup": "Symbolgruppe"
@@ -102,8 +102,8 @@
     "unknownAppointment": "Unbekannter Termin {{id}}",
     "invalidDate": "„{{date}}“ ist kein gültiges Datum (JJJJ-MM-TT)",
     "unknownCountdown": "Unbekannter Countdown {{id}}",
-    "appointmentAfterTarget": "Der Termin am {{date}} muss vor dem Zieldatum {{target}} liegen",
-    "countdownBeforeAppointment": "Der Termin „{{title}}“ am {{date}} muss vor dem Zieldatum {{target}} liegen",
+    "appointmentAfterTarget": "Der Termin am {{date}} darf nicht nach dem Zieldatum {{target}} liegen",
+    "countdownBeforeAppointment": "Der Termin „{{title}}“ am {{date}} darf nicht nach dem Zieldatum {{target}} liegen",
     "backup": {
       "notJson": "Die Datei ist kein gültiges JSON.",
       "notObject": "Die Sicherung muss ein JSON-Objekt sein.",
@@ -114,7 +114,7 @@
       "countdownDescription": "{{where}}.description muss ein Text sein.",
       "appointmentsArray": "{{where}}.appointments muss eine Liste sein.",
       "appointmentDate": "{{where}}.date muss ein Datum im Format JJJJ-MM-TT sein.",
-      "appointmentAfterTarget": "{{where}}.date ({{date}}) muss vor dem Zieldatum {{target}} liegen.",
+      "appointmentAfterTarget": "{{where}}.date ({{date}}) darf nicht nach dem Zieldatum {{target}} liegen.",
       "appointmentTitle": "{{where}}.title muss ein nicht leerer Text sein."
     }
   },

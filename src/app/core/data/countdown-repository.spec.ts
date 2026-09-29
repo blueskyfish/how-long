@@ -106,13 +106,17 @@ describe('CountdownRepository', () => {
       ]);
     });
 
-    it('rejects an appointment on or after the target date', async () => {
-      await expect(repository.createAppointment(appointment('2026-12-24'))).rejects.toThrow(
-        /before the target date/i,
-      );
+    it('creates an appointment on the target date itself', async () => {
+      const id = await repository.createAppointment(appointment('2026-12-24', 'The day'));
+
+      expect(await repository.getAppointment(id)).toMatchObject({ date: '2026-12-24' });
+    });
+
+    it('rejects an appointment after the target date', async () => {
       await expect(repository.createAppointment(appointment('2026-12-25'))).rejects.toThrow(
-        /before the target date/i,
+        /must not be after the target date/i,
       );
+      expect(await repository.listAppointments(countdownId)).toEqual([]);
     });
 
     it('rejects an appointment for an unknown countdown', async () => {
@@ -137,9 +141,34 @@ describe('CountdownRepository', () => {
       const id = await repository.createAppointment(appointment('2026-12-01'));
 
       await expect(repository.updateAppointment(id, { date: '2026-12-25' })).rejects.toThrow(
-        /before the target date/i,
+        /must not be after the target date/i,
       );
       expect((await repository.listAppointments(countdownId))[0].date).toBe('2026-12-01');
+    });
+
+    it('lets an appointment move onto the target date', async () => {
+      const id = await repository.createAppointment(appointment('2026-12-01'));
+
+      await repository.updateAppointment(id, { date: '2026-12-24' });
+
+      expect((await repository.getAppointment(id))?.date).toBe('2026-12-24');
+    });
+
+    it('lets the target date move onto the day of its latest appointment', async () => {
+      await repository.createAppointment(appointment('2026-12-10'));
+
+      await repository.updateCountdown(countdownId, { date: '2026-12-10' });
+
+      expect((await repository.getCountdown(countdownId))?.date).toBe('2026-12-10');
+    });
+
+    it('refuses to move the target date before an appointment', async () => {
+      await repository.createAppointment(appointment('2026-12-10'));
+
+      await expect(repository.updateCountdown(countdownId, { date: '2026-12-09' })).rejects.toThrow(
+        /must not be after the target date/i,
+      );
+      expect((await repository.getCountdown(countdownId))?.date).toBe('2026-12-24');
     });
 
     it('updates an appointment', async () => {

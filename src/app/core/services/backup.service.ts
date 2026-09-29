@@ -168,10 +168,10 @@ export class BackupService {
           { where: appointmentWhere },
         );
       }
-      if (appointmentDate >= date) {
+      if (appointmentDate > date) {
         throw new LocalizedError(
           'errors.backup.appointmentAfterTarget',
-          `${appointmentWhere}.date (${appointmentDate}) must be before the target date ${date}.`,
+          `${appointmentWhere}.date (${appointmentDate}) must not be after the target date ${date}.`,
           { where: appointmentWhere, date: appointmentDate, target: date },
         );
       }

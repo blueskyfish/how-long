@@ -73,19 +73,13 @@ describe('AppointmentDialog', () => {
     });
   });
 
-  it('caps the date input at the day before the target date', () => {
+  it('caps the date input at the target date itself', () => {
     const fixture = render({ targetDate: '2026-12-24' });
 
-    expect(internals(fixture).maxDate).toBe('2026-12-23');
+    expect(internals(fixture).maxDate).toBe('2026-12-24');
     expect(fixture.nativeElement.querySelector('#appointment-date').getAttribute('max')).toBe(
-      '2026-12-23',
+      '2026-12-24',
     );
-  });
-
-  it('caps correctly across a month boundary', () => {
-    const fixture = render({ targetDate: '2026-03-01' });
-
-    expect(internals(fixture).maxDate).toBe('2026-02-28');
   });
 
   it('prefills the form when editing', () => {
@@ -130,9 +124,20 @@ describe('AppointmentDialog', () => {
     });
   });
 
-  it('refuses a date on or after the target date', () => {
+  it('accepts a date on the target date', () => {
     const fixture = render({ targetDate: '2026-12-24' });
-    fill(fixture, { title: 'Too late', date: '2026-12-24' });
+    fill(fixture, { title: 'The day', date: '2026-12-24' });
+
+    submit(fixture);
+    fixture.detectChanges();
+
+    expect(close).toHaveBeenCalledWith(expect.objectContaining({ date: '2026-12-24' }));
+    expect(fixture.nativeElement.querySelector('[data-testid="date-error"]')).toBeNull();
+  });
+
+  it('refuses a date after the target date', () => {
+    const fixture = render({ targetDate: '2026-12-24' });
+    fill(fixture, { title: 'Too late', date: '2026-12-25' });
 
     submit(fixture);
     fixture.detectChanges();
@@ -379,7 +384,7 @@ describe('AppointmentDialog', () => {
       const text: string = fixture.nativeElement.textContent.replace(/\s+/g, ' ');
       expect(text).toContain('Neuer Termin');
       expect(text).toContain('Titel');
-      expect(text).toContain('Muss vor dem 24.12.2026 liegen.');
+      expect(text).toContain('Muss am 24.12.2026 oder früher liegen.');
     });
 
     it('names the colours, icons and groups in German', async () => {
@@ -408,16 +413,16 @@ describe('AppointmentDialog', () => {
       expect(select.selectedOptions[0].textContent?.trim()).toBe('Feiern');
     });
 
-    it('explains a date on or after the target in German', async () => {
+    it('explains a date after the target in German', async () => {
       const fixture = await renderGerman({ targetDate: '2026-12-24' });
-      fill(fixture, { title: 'Too late', date: '2026-12-24' });
+      fill(fixture, { title: 'Too late', date: '2026-12-25' });
 
       submit(fixture);
       fixture.detectChanges();
 
       expect(
         fixture.nativeElement.querySelector('[data-testid="date-error"]').textContent.trim(),
-      ).toBe('Das Datum muss vor dem 24.12.2026 liegen.');
+      ).toBe('Das Datum darf nicht nach dem 24.12.2026 liegen.');
     });
   });
 });
