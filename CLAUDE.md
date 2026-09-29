@@ -52,6 +52,11 @@ the hash location strategy (`#/admin/3`), so the build can be served from any pa
   by `features/home/remembered-countdown.ts` (query parameter → remembered, unless its date
   has passed → next due).
   Specs provide `COUNTDOWN_STORAGE` with `memoryStorage()` from `src/testing/storage.ts`.
+- **Forms** — Signal Forms (`@angular/forms/signals`), not reactive forms. A dialog keeps its
+  values in a `signal` model and wraps it in `form(model, schema)`; rules (`required`,
+  `maxLength`, `validate`) live in the schema, bound to inputs with `[formField]` and to the
+  `<form>` with `[formRoot]`. Attributes such as `maxlength` come from the rules, not the
+  template. Specs set values through `form.<field>().value.set(...)`.
 - **Backup** — `core/services/backup.service.ts` validates a whole file before writing and
   restores in a single transaction; database ids are not exported.
 - **Router features** are exported as `routerFeatures` from `app.config.ts` and reused by the
