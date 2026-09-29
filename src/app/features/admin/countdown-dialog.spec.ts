@@ -21,9 +21,18 @@ describe('CountdownDialog', () => {
     return fixture;
   }
 
-  /** Reads the reactive form of the component under test, which is not public API. */
+  /** Reads the signal form of the component under test, which is not public API. */
   const formOf = (fixture: ComponentFixture<CountdownDialog>) =>
     (fixture.componentInstance as unknown as { form: any }).form;
+
+  /** Sets the model directly, for values a native date input would refuse to hold. */
+  const fill = (
+    fixture: ComponentFixture<CountdownDialog>,
+    values: { date: string; description: string },
+  ) => {
+    formOf(fixture).date().value.set(values.date);
+    formOf(fixture).description().value.set(values.description);
+  };
 
   const submit = (fixture: ComponentFixture<CountdownDialog>) =>
     fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit'));
@@ -32,14 +41,14 @@ describe('CountdownDialog', () => {
     const fixture = render({});
 
     expect(fixture.nativeElement.textContent).toContain('New countdown');
-    expect(formOf(fixture).invalid).toBe(true);
+    expect(formOf(fixture)().invalid()).toBe(true);
   });
 
   it('prefills the form when editing', () => {
     const fixture = render({ countdown: { id: 1, date: '2026-12-24', description: 'Christmas' } });
 
     expect(fixture.nativeElement.textContent).toContain('Edit countdown');
-    expect(formOf(fixture).getRawValue()).toEqual({
+    expect(formOf(fixture)().value()).toEqual({
       date: '2026-12-24',
       description: 'Christmas',
     });
@@ -47,7 +56,7 @@ describe('CountdownDialog', () => {
 
   it('closes with the entered values', () => {
     const fixture = render({});
-    formOf(fixture).setValue({ date: '2026-12-24', description: 'Christmas' });
+    fill(fixture, { date: '2026-12-24', description: 'Christmas' });
 
     submit(fixture);
 
@@ -56,7 +65,7 @@ describe('CountdownDialog', () => {
 
   it('drops a blank description instead of storing an empty string', () => {
     const fixture = render({});
-    formOf(fixture).setValue({ date: '2026-12-24', description: '   ' });
+    fill(fixture, { date: '2026-12-24', description: '   ' });
 
     submit(fixture);
 
@@ -73,7 +82,7 @@ describe('CountdownDialog', () => {
 
   it('rejects a date that is not a real calendar day', () => {
     const fixture = render({});
-    formOf(fixture).setValue({ date: '2026-02-30', description: '' });
+    fill(fixture, { date: '2026-02-30', description: '' });
 
     submit(fixture);
 
@@ -100,6 +109,17 @@ describe('CountdownDialog', () => {
     fixture.detectChanges();
 
     expect(error()).not.toBeNull();
+  });
+
+  it('caps the description at 120 characters', () => {
+    const fixture = render({});
+
+    expect(fixture.nativeElement.querySelector('#countdown-description').maxLength).toBe(120);
+
+    fill(fixture, { date: '2026-12-24', description: 'x'.repeat(121) });
+    submit(fixture);
+
+    expect(close).not.toHaveBeenCalled();
   });
 
   it('closes with undefined when cancelled', () => {
