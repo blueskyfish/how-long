@@ -61,7 +61,10 @@ import { RememberedIconGroup } from './remembered-icon-group';
     <main class="mx-auto w-full max-w-2xl px-safe-4 pt-4 pb-safe-28">
       @if (countdown(); as active) {
         @if (active.description) {
-          <p class="text-muted-foreground px-1 pb-3 text-sm wrap-anywhere">
+          <p
+            class="text-muted-foreground px-1 pb-3 text-base wrap-anywhere"
+            data-testid="description"
+          >
             {{ active.description }}
           </p>
         }
