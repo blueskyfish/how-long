@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { BrnDialogRef, injectBrnDialogContext } from '@spartan-ng/brain/dialog';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmDialogFooter, HlmDialogHeader, HlmDialogTitle } from '@spartan-ng/helm/dialog';
@@ -15,29 +16,33 @@ export interface ImportDialogContext {
 @Component({
   selector: 'app-import-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [HlmButton, HlmDialogFooter, HlmDialogHeader, HlmDialogTitle],
+  imports: [HlmButton, HlmDialogFooter, HlmDialogHeader, HlmDialogTitle, TranslatePipe],
   template: `
     <div hlmDialogHeader>
-      <h2 hlmDialogTitle>Import backup</h2>
+      <h2 hlmDialogTitle>{{ 'importDialog.title' | translate }}</h2>
       <p class="text-muted-foreground text-sm">
-        The file contains {{ context.backup.countdowns.length }} countdown(s) and
-        {{ appointmentCount }} appointment(s).
+        {{
+          'importDialog.contains'
+            | translate
+              : { countdowns: context.backup.countdowns.length, appointments: appointmentCount }
+        }}
       </p>
     </div>
     @if (context.existingCountdowns > 0) {
       <p class="text-muted-foreground text-sm">
-        Replacing discards the {{ context.existingCountdowns }} countdown(s) already stored on this
-        device.
+        {{ 'importDialog.replaceWarning' | translate: { count: context.existingCountdowns } }}
       </p>
     }
     <div hlmDialogFooter>
       <button hlmBtn variant="outline" (click)="close(undefined)" data-testid="cancel">
-        Cancel
+        {{ 'common.cancel' | translate }}
       </button>
       <button hlmBtn variant="secondary" (click)="close('merge')" data-testid="merge">
-        Add to existing
+        {{ 'importDialog.merge' | translate }}
       </button>
-      <button hlmBtn (click)="close('replace')" data-testid="replace">Replace all</button>
+      <button hlmBtn (click)="close('replace')" data-testid="replace">
+        {{ 'importDialog.replace' | translate }}
+      </button>
     </div>
   `,
 })

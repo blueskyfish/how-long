@@ -12,6 +12,7 @@ import {
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmDialogService } from '@spartan-ng/helm/dialog';
 import { filter, fromEvent, merge, of, switchMap } from 'rxjs';
@@ -36,7 +37,15 @@ const URGENT_WITHIN_DAYS = 3;
 @Component({
   selector: 'app-home-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AppointmentList, CountdownPicker, DayCounter, HlmButton, NgIcon, RouterLink],
+  imports: [
+    AppointmentList,
+    CountdownPicker,
+    DayCounter,
+    HlmButton,
+    NgIcon,
+    RouterLink,
+    TranslatePipe,
+  ],
   hostDirectives: [PullToRefresh],
   host: {
     // On the host rather than <main>, so the tint spans the whole viewport, notch included.
@@ -88,7 +97,7 @@ const URGENT_WITHIN_DAYS = 3;
             [days]="daysRemaining()"
             [urgent]="urgent()"
             (dblclick)="refresh()"
-            title="Double-click to refresh"
+            [attr.title]="'home.refreshHint' | translate"
           />
 
           <div class="landscape-phone:mt-3 mt-6 flex justify-center">
@@ -108,7 +117,10 @@ const URGENT_WITHIN_DAYS = 3;
         <section
           class="landscape-phone:mt-0 landscape-phone:min-w-0 landscape-phone:flex-1 landscape-phone:max-h-[80dvh] landscape-phone:overflow-y-auto mt-10 text-left"
         >
-          <app-appointment-list [appointments]="preview()" emptyLabel="No appointments ahead." />
+          <app-appointment-list
+            [appointments]="preview()"
+            [emptyLabel]="'home.noAppointmentsAhead' | translate"
+          />
           @if (hasMore()) {
             <div class="mt-2 text-center">
               <button
@@ -118,7 +130,7 @@ const URGENT_WITHIN_DAYS = 3;
                 (click)="showAll()"
                 data-testid="more-button"
               >
-                More ({{ appointments().length }})
+                {{ 'home.more' | translate: { count: appointments().length } }}
               </button>
             </div>
           }
@@ -129,9 +141,9 @@ const URGENT_WITHIN_DAYS = 3;
         >
           <ng-icon name="lucideHourglass" class="text-muted-foreground text-5xl" />
           <p class="text-muted-foreground text-lg" data-testid="empty-state">
-            No countdown configured yet.
+            {{ 'home.emptyState' | translate }}
           </p>
-          <a hlmBtn routerLink="/admin">Create one</a>
+          <a hlmBtn routerLink="/admin">{{ 'home.createOne' | translate }}</a>
         </div>
       }
     </main>
@@ -140,7 +152,7 @@ const URGENT_WITHIN_DAYS = 3;
       hlmBtn
       size="icon-lg"
       routerLink="/admin"
-      aria-label="Administration"
+      [attr.aria-label]="'home.admin' | translate"
       class="right-safe-6 bottom-safe-6 fixed rounded-full shadow-lg"
       data-testid="admin-fab"
     >

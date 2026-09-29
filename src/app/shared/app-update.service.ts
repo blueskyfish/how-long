@@ -1,6 +1,7 @@
 import { DOCUMENT, DestroyRef, Injectable, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
+import { TranslateService } from '@ngx-translate/core';
 import { filter, fromEvent, interval, merge } from 'rxjs';
 import { NotificationService } from './notification.service';
 
@@ -16,6 +17,7 @@ const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 export class AppUpdateService {
   private readonly updates = inject(SwUpdate);
   private readonly notifications = inject(NotificationService);
+  private readonly translate = inject(TranslateService);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -38,8 +40,8 @@ export class AppUpdateService {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() =>
         this.notifications.action(
-          'This version can no longer be loaded. Reload to continue.',
-          'Reload',
+          this.translate.instant('update.unrecoverable'),
+          this.translate.instant('update.reload'),
           () => this.reload(),
         ),
       );
@@ -61,7 +63,11 @@ export class AppUpdateService {
       return;
     }
     this.offered = true;
-    this.notifications.action('A new version is available.', 'Update', () => this.applyUpdate());
+    this.notifications.action(
+      this.translate.instant('update.available'),
+      this.translate.instant('update.action'),
+      () => this.applyUpdate(),
+    );
   }
 
   private async applyUpdate(): Promise<void> {

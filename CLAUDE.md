@@ -59,6 +59,15 @@ the hash location strategy (`#/admin/3`), so the build can be served from any pa
   template. Specs set values through `form.<field>().value.set(...)`. A date field's error
   follows the DOM `input` event (`dateTouched`), not `touched` or `dirty`: the first fires on
   merely leaving the field, and a native date input can set the second by itself.
+- **Languages** — ngx-translate 18; texts in `public/assets/i18n/{en,de}.json`, both listed in
+  `ngsw-config.json`. `LanguageService` (`core/i18n`) owns the language as a signal, saves it in
+  `localStorage` and loads it in an app initializer before the first render. Templates use the
+  `translate` pipe, classes `translate(() => key)` (signal) or `instant` (one-off toasts).
+  Dates go through the `localDate` pipe (`DD.MM.YYYY` in German, ISO in English); stored data
+  and `<time datetime>` stay ISO. Text the user reads from a service is a `LocalizedError`
+  (English `message`, translated via `key`/`params`). Never add a text to only one file: a spec
+  compares keys and placeholders. Specs provide `...provideTestI18n()` from
+  `src/testing/i18n.ts` and render in English; German is set with `LanguageService.use('de')`.
 - **Backup** — `core/services/backup.service.ts` validates a whole file before writing and
   restores in a single transaction; database ids are not exported.
 - **Router features** are exported as `routerFeatures` from `app.config.ts` and reused by the
@@ -82,8 +91,9 @@ the hash location strategy (`#/admin/3`), so the build can be served from any pa
   plain spacing. Test without a notch by overriding `--safe-top` etc. on `<html>`.
 - Landscape phones use the custom `landscape-phone:` variant. It is bounded by
   `max-height: 30rem`, so tablets and desktops keep the stacked layout.
-- Appointment icons: list them (label, Lucide value, group) in `APPOINTMENT_ICONS` in
-  `shared/appointment-style.ts`, then run `npm run icons:generate` to regenerate
+- Appointment icons: list them (English label, Lucide value, group) in `APPOINTMENT_ICONS` in
+  `shared/appointment-style.ts`, name each in both language files under
+  `appointment.icons.<value>`, then run `npm run icons:generate` to regenerate
   `shared/appointment-icon-svgs.ts`. Never import them from `@ng-icons/lucide` in app code or
   add them to `APP_ICONS` (UI icons only): they are loaded lazily by `loadAppointmentIcon`,
   and a static import would put them back into the initial bundle. Specs register all icons

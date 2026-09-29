@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HOW_LONG_DB } from '../data/db';
+import { LocalizedError } from '../i18n/localized-error';
 import { BACKUP_VERSION, Backup, BackupCountdown } from '../models';
 import { isValidIsoDate } from './date-utils';
 
@@ -62,7 +63,7 @@ export class BackupService {
     try {
       raw = JSON.parse(json);
     } catch {
-      throw new Error('The file is not valid JSON.');
+      throw new LocalizedError('errors.backup.notJson', 'The file is not valid JSON.');
     }
     return this.validate(raw);
   }
@@ -93,13 +94,20 @@ export class BackupService {
 
   private validate(raw: unknown): Backup {
     if (!this.isRecord(raw)) {
-      throw new Error('The backup must be a JSON object.');
+      throw new LocalizedError('errors.backup.notObject', 'The backup must be a JSON object.');
     }
     if (raw['version'] !== BACKUP_VERSION) {
-      throw new Error(`Unsupported backup version ${raw['version']}; expected ${BACKUP_VERSION}.`);
+      throw new LocalizedError(
+        'errors.backup.unsupportedVersion',
+        `Unsupported backup version ${raw['version']}; expected ${BACKUP_VERSION}.`,
+        { found: String(raw['version']), expected: BACKUP_VERSION },
+      );
     }
     if (!Array.isArray(raw['countdowns'])) {
-      throw new Error('The backup is missing its "countdowns" array.');
+      throw new LocalizedError(
+        'errors.backup.missingCountdowns',
+        'The backup is missing its "countdowns" array.',
+      );
     }
 
     const countdowns = raw['countdowns'].map((entry, index) =>
@@ -114,38 +122,66 @@ export class BackupService {
   private validateCountdown(raw: unknown, index: number): BackupCountdown {
     const where = `countdowns[${index}]`;
     if (!this.isRecord(raw)) {
-      throw new Error(`${where} must be an object.`);
+      throw new LocalizedError('errors.backup.mustBeObject', `${where} must be an object.`, {
+        where,
+      });
     }
     const date = raw['date'];
     if (typeof date !== 'string' || !isValidIsoDate(date)) {
-      throw new Error(`${where}.date must be a yyyy-mm-dd date, got ${JSON.stringify(date)}.`);
+      throw new LocalizedError(
+        'errors.backup.countdownDate',
+        `${where}.date must be a yyyy-mm-dd date, got ${JSON.stringify(date)}.`,
+        { where, got: JSON.stringify(date) ?? 'undefined' },
+      );
     }
     const description = raw['description'];
     if (description !== undefined && typeof description !== 'string') {
-      throw new Error(`${where}.description must be a string.`);
+      throw new LocalizedError(
+        'errors.backup.countdownDescription',
+        `${where}.description must be a string.`,
+        { where },
+      );
     }
     const rawAppointments = raw['appointments'] ?? [];
     if (!Array.isArray(rawAppointments)) {
-      throw new Error(`${where}.appointments must be an array.`);
+      throw new LocalizedError(
+        'errors.backup.appointmentsArray',
+        `${where}.appointments must be an array.`,
+        { where },
+      );
     }
 
     const appointments = rawAppointments.map((entry, appointmentIndex) => {
       const appointmentWhere = `${where}.appointments[${appointmentIndex}]`;
       if (!this.isRecord(entry)) {
-        throw new Error(`${appointmentWhere} must be an object.`);
+        throw new LocalizedError(
+          'errors.backup.mustBeObject',
+          `${appointmentWhere} must be an object.`,
+          { where: appointmentWhere },
+        );
       }
       const appointmentDate = entry['date'];
       if (typeof appointmentDate !== 'string' || !isValidIsoDate(appointmentDate)) {
-        throw new Error(`${appointmentWhere}.date must be a yyyy-mm-dd date.`);
+        throw new LocalizedError(
+          'errors.backup.appointmentDate',
+          `${appointmentWhere}.date must be a yyyy-mm-dd date.`,
+          { where: appointmentWhere },
+        );
       }
       if (appointmentDate >= date) {
-        throw new Error(
+        throw new LocalizedError(
+          'errors.backup.appointmentAfterTarget',
           `${appointmentWhere}.date (${appointmentDate}) must be before the target date ${date}.`,
+          { where: appointmentWhere, date: appointmentDate, target: date },
         );
       }
       const title = entry['title'];
       if (typeof title !== 'string' || title.trim() === '') {
-        throw new Error(`${appointmentWhere}.title must be a non-empty string.`);
+        throw new LocalizedError(
+          'errors.backup.appointmentTitle',
+          `${appointmentWhere}.title must be a non-empty string.`,
+          { where: appointmentWhere },
+        );
       }
       return {
         date: appointmentDate,

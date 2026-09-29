@@ -4,7 +4,9 @@ import { SwUpdate, UnrecoverableStateEvent, VersionEvent } from '@angular/servic
 import { Subject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { provideNotificationSpy } from '../../testing/notification';
+import { LanguageService } from '../core/i18n/language.service';
 import { AppUpdateService } from './app-update.service';
+import { provideTestI18n } from '../../testing/i18n';
 
 const VERSION_READY: VersionEvent = {
   type: 'VERSION_READY',
@@ -46,6 +48,7 @@ describe('AppUpdateService', () => {
     notifications = spy.notifications;
     TestBed.configureTestingModule({
       providers: [
+        ...provideTestI18n(),
         { provide: SwUpdate, useValue: swUpdate },
         { provide: DOCUMENT, useValue: fakeDocument },
         spy.provider,
@@ -147,5 +150,35 @@ describe('AppUpdateService', () => {
 
     expect(() => service.start()).not.toThrow();
     await vi.advanceTimersByTimeAsync(0);
+  });
+
+  describe('in German', () => {
+    it('offers the new version in German', async () => {
+      const service = setup();
+      await TestBed.inject(LanguageService).use('de');
+      service.start();
+
+      versionUpdates.next(VERSION_READY);
+
+      expect(notifications.action).toHaveBeenCalledWith(
+        'Eine neue Version ist verfügbar.',
+        'Aktualisieren',
+        expect.any(Function),
+      );
+    });
+
+    it('asks for a reload in German', async () => {
+      const service = setup();
+      await TestBed.inject(LanguageService).use('de');
+      service.start();
+
+      unrecoverable.next({ type: 'UNRECOVERABLE_STATE', reason: 'missing file' });
+
+      expect(notifications.action).toHaveBeenCalledWith(
+        'Diese Version kann nicht mehr geladen werden. Zum Fortfahren neu laden.',
+        'Neu laden',
+        expect.any(Function),
+      );
+    });
   });
 });

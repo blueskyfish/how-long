@@ -1,6 +1,8 @@
 import { Injectable, inject } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { HlmDialogService } from '@spartan-ng/helm/dialog';
 import { CountdownRepository } from '../../core/data/countdown-repository';
+import { LanguageService } from '../../core/i18n/language.service';
 import { BackupService, RestoreMode } from '../../core/services/backup.service';
 import { openDialog } from '../../shared/dialog';
 import { FileTransferService } from '../../shared/file-transfer.service';
@@ -18,12 +20,16 @@ export class BackupActions {
   private readonly dialog = inject(HlmDialogService);
   private readonly files = inject(FileTransferService);
   private readonly notifications = inject(NotificationService);
+  private readonly translate = inject(TranslateService);
+  private readonly language = inject(LanguageService);
 
   /** Downloads the whole database as a JSON file. */
   async export(): Promise<void> {
     const backup = await this.backups.createBackup();
     this.files.download(this.backups.toJson(backup), this.backups.fileName(backup));
-    this.notifications.success(`Exported ${backup.countdowns.length} countdown(s).`);
+    this.notifications.success(
+      this.translate.instant('backup.exported', { count: backup.countdowns.length }),
+    );
   }
 
   /** Opens the file picker and imports the chosen file. */
@@ -40,7 +46,7 @@ export class BackupActions {
     try {
       backup = this.backups.parse(await file.text());
     } catch (error) {
-      this.notifications.error(`Import failed: ${(error as Error).message}`);
+      this.notifications.error(this.failed(error));
       return;
     }
 
@@ -57,10 +63,17 @@ export class BackupActions {
     try {
       const result = await this.backups.restore(backup, mode);
       this.notifications.success(
-        `Imported ${result.countdowns} countdown(s) and ${result.appointments} appointment(s).`,
+        this.translate.instant('backup.imported', {
+          countdowns: result.countdowns,
+          appointments: result.appointments,
+        }),
       );
     } catch (error) {
-      this.notifications.error(`Import failed: ${(error as Error).message}`);
+      this.notifications.error(this.failed(error));
     }
+  }
+
+  private failed(error: unknown): string {
+    return this.translate.instant('backup.failed', { message: this.language.errorMessage(error) });
   }
 }

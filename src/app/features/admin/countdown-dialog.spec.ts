@@ -2,7 +2,9 @@ import { DIALOG_DATA } from '@angular/cdk/dialog';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BrnDialogRef } from '@spartan-ng/brain/dialog';
 import { describe, expect, it, vi } from 'vitest';
+import { LanguageService } from '../../core/i18n/language.service';
 import { CountdownDialog, CountdownDialogContext } from './countdown-dialog';
+import { provideTestI18n } from '../../../testing/i18n';
 
 describe('CountdownDialog', () => {
   const close = vi.fn();
@@ -12,6 +14,7 @@ describe('CountdownDialog', () => {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
+        ...provideTestI18n(),
         { provide: DIALOG_DATA, useValue: context },
         { provide: BrnDialogRef, useValue: { close } },
       ],
@@ -139,5 +142,31 @@ describe('CountdownDialog', () => {
     fixture.nativeElement.querySelector('[data-testid="cancel"]').click();
 
     expect(close).toHaveBeenCalledWith(undefined);
+  });
+
+  it('speaks German', async () => {
+    const fixture = render({});
+    await TestBed.inject(LanguageService).use('de');
+    fixture.detectChanges();
+
+    const page: HTMLElement = fixture.nativeElement;
+    expect(page.textContent).toContain('Neuer Countdown');
+    expect(page.textContent).toContain('Zieldatum');
+    expect(page.querySelector<HTMLInputElement>('#countdown-description')?.placeholder).toBe(
+      'Optional',
+    );
+    expect(page.querySelector('[data-testid="save"]')?.textContent?.trim()).toBe('Speichern');
+    expect(page.querySelector('[data-testid="cancel"]')?.textContent?.trim()).toBe('Abbrechen');
+  });
+
+  it('explains a rejected date in German', async () => {
+    const fixture = render({});
+    await TestBed.inject(LanguageService).use('de');
+    submit(fixture);
+    fixture.detectChanges();
+
+    expect(
+      fixture.nativeElement.querySelector('[data-testid="date-error"]').textContent.trim(),
+    ).toBe('Wähle ein gültiges Zieldatum.');
   });
 });

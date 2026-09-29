@@ -6,22 +6,28 @@ import { HOW_LONG_DB, HowLongDatabase } from '../../core/data/db';
 import { settle } from '../../../testing/settle';
 import { stubDialog } from '../../../testing/dialog';
 import { provideNotificationSpy } from '../../../testing/notification';
+import { LanguageService } from '../../core/i18n/language.service';
 import { AdminOverviewPage } from './admin-overview-page';
 import { provideTestIcons } from '../../../testing/icons';
+import { provideTestI18n } from '../../../testing/i18n';
 
 describe('AdminOverviewPage', () => {
   let db: HowLongDatabase;
   let repository: CountdownRepository;
   let fixture: ComponentFixture<AdminOverviewPage>;
+  let notifications: ReturnType<typeof provideNotificationSpy>['notifications'];
 
   beforeEach(async () => {
     db = new HowLongDatabase(`how-long-overview-${crypto.randomUUID()}`);
+    const notificationSpy = provideNotificationSpy();
+    notifications = notificationSpy.notifications;
     TestBed.configureTestingModule({
       providers: [
+        ...provideTestI18n(),
         { provide: HOW_LONG_DB, useValue: db },
         provideRouter([]),
         provideTestIcons(),
-        provideNotificationSpy().provider,
+        notificationSpy.provider,
       ],
     });
     repository = TestBed.inject(CountdownRepository);
@@ -134,5 +140,53 @@ describe('AdminOverviewPage', () => {
     await settle(fixture, 2);
 
     expect(fixture.nativeElement.textContent).not.toContain('Drop a JSON backup to import');
+  });
+
+  describe('in German', () => {
+    beforeEach(async () => {
+      await TestBed.inject(LanguageService).use('de');
+    });
+
+    /** The context the last dialog was opened with. */
+    const dialogContext = (open: ReturnType<typeof stubDialog>) =>
+      (open.mock.calls[0][1] as unknown as { context: { title: string; message: string } }).context;
+
+    it('writes the dates as DD.MM.YYYY and counts the days in German', async () => {
+      await repository.createCountdown({ date: '2099-12-24', description: 'Weihnachten' });
+
+      await render();
+
+      const row = fixture.nativeElement.querySelector('main li').textContent;
+      expect(row).toContain('24.12.2099');
+      expect(row).toMatch(/in \d+ Tag\(en\)/);
+      expect(row).toContain('Weihnachten');
+    });
+
+    it('labels the buttons in German, with the date in the language', async () => {
+      await repository.createCountdown({ date: '2099-12-24' });
+
+      await render();
+
+      expect(
+        fixture.nativeElement.querySelector('[aria-label="Countdown 24.12.2099 löschen"]'),
+      ).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('[aria-label="Neuer Countdown"]')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('h1').textContent.trim()).toBe('Countdowns');
+    });
+
+    it('asks for the confirmation in German and reports the deletion in German', async () => {
+      await repository.createCountdown({ date: '2099-12-24' });
+      await render();
+      const open = stubDialog(true);
+
+      fixture.nativeElement.querySelector('[aria-label="Countdown 24.12.2099 löschen"]').click();
+      await settle(fixture);
+
+      expect(dialogContext(open)).toEqual({
+        title: 'Countdown löschen?',
+        message: '24.12.2099 und alle zugehörigen Termine werden entfernt.',
+      });
+      expect(notifications.success).toHaveBeenCalledWith('Countdown gelöscht.');
+    });
   });
 });

@@ -11,6 +11,7 @@ import { AdminOverviewPage } from './features/admin/admin-overview-page';
 import { HomePage } from './features/home/home-page';
 import { settle } from '../testing/settle';
 import { provideTestIcons } from '../testing/icons';
+import { provideTestI18n } from '../testing/i18n';
 
 describe('routing', () => {
   let db: HowLongDatabase;
@@ -20,6 +21,7 @@ describe('routing', () => {
     db = new HowLongDatabase(`how-long-routes-${crypto.randomUUID()}`);
     TestBed.configureTestingModule({
       providers: [
+        ...provideTestI18n(),
         { provide: HOW_LONG_DB, useValue: db },
         provideRouter(routes, ...routerFeatures),
         provideTestIcons(),

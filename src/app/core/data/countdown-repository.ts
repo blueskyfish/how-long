@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { liveQuery } from 'dexie';
+import { LocalizedError } from '../i18n/localized-error';
 import { Appointment, Countdown } from '../models';
 import { isValidIsoDate } from '../services/date-utils';
 import { pickNextCountdown } from '../services/next-countdown';
@@ -85,7 +86,7 @@ export class CountdownRepository {
   async updateAppointment(id: number, changes: Partial<Omit<Appointment, 'id'>>): Promise<void> {
     const existing = await this.db.appointments.get(id);
     if (!existing) {
-      throw new Error(`Unknown appointment ${id}`);
+      throw new LocalizedError('errors.unknownAppointment', `Unknown appointment ${id}`, { id });
     }
     const merged = { ...existing, ...changes };
     this.assertIsoDate(merged.date);
@@ -101,17 +102,25 @@ export class CountdownRepository {
 
   private assertIsoDate(date: string): void {
     if (!isValidIsoDate(date)) {
-      throw new Error(`"${date}" is not a valid yyyy-mm-dd date`);
+      throw new LocalizedError('errors.invalidDate', `"${date}" is not a valid yyyy-mm-dd date`, {
+        date,
+      });
     }
   }
 
   private async assertBeforeTargetDate(countdownId: number, date: string): Promise<void> {
     const countdown = await this.db.countdowns.get(countdownId);
     if (!countdown) {
-      throw new Error(`Unknown countdown ${countdownId}`);
+      throw new LocalizedError('errors.unknownCountdown', `Unknown countdown ${countdownId}`, {
+        id: countdownId,
+      });
     }
     if (date >= countdown.date) {
-      throw new Error(`Appointment date ${date} must be before the target date ${countdown.date}`);
+      throw new LocalizedError(
+        'errors.appointmentAfterTarget',
+        `Appointment date ${date} must be before the target date ${countdown.date}`,
+        { date, target: countdown.date },
+      );
     }
   }
 
@@ -119,8 +128,10 @@ export class CountdownRepository {
     const appointments = await this.listAppointments(countdownId);
     const conflict = appointments.find((appointment) => appointment.date >= date);
     if (conflict) {
-      throw new Error(
+      throw new LocalizedError(
+        'errors.countdownBeforeAppointment',
         `Appointment "${conflict.title}" on ${conflict.date} must be before the target date ${date}`,
+        { title: conflict.title, date: conflict.date, target: date },
       );
     }
   }

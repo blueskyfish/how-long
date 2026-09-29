@@ -2,14 +2,18 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmDialogService } from '@spartan-ng/helm/dialog';
 import { CountdownRepository } from '../../core/data/countdown-repository';
+import { LanguageService } from '../../core/i18n/language.service';
+import { LocalDatePipe } from '../../core/i18n/local-date.pipe';
 import { Countdown } from '../../core/models';
 import { daysUntil } from '../../core/services/date-utils';
 import { ConfirmDialog, ConfirmDialogContext } from '../../shared/confirm-dialog';
 import { openDialog } from '../../shared/dialog';
 import { FileTransferService } from '../../shared/file-transfer.service';
+import { LanguageSwitch } from '../../shared/language-switch';
 import { NotificationService } from '../../shared/notification.service';
 import { BackupActions } from './backup-actions';
 import { CountdownDialog, CountdownDialogContext, CountdownDialogResult } from './countdown-dialog';
@@ -17,7 +21,7 @@ import { CountdownDialog, CountdownDialogContext, CountdownDialogResult } from '
 @Component({
   selector: 'app-admin-overview-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [HlmButton, NgIcon, RouterLink],
+  imports: [HlmButton, LanguageSwitch, LocalDatePipe, NgIcon, RouterLink, TranslatePipe],
   host: {
     '(dragover)': 'onDragOver($event)',
     '(dragleave)': 'onDragLeave($event)',
@@ -28,17 +32,24 @@ import { CountdownDialog, CountdownDialogContext, CountdownDialogResult } from '
       class="bg-background/80 border-border sticky top-0 z-10 border-b px-safe-3 pt-safe-0 backdrop-blur"
     >
       <div class="flex h-14 items-center gap-2">
-        <a hlmBtn variant="ghost" size="icon" routerLink="/" aria-label="Back to countdown">
+        <a
+          hlmBtn
+          variant="ghost"
+          size="icon"
+          routerLink="/"
+          [attr.aria-label]="'admin.overview.back' | translate"
+        >
           <ng-icon name="lucideArrowLeft" class="text-lg" />
         </a>
-        <h1 class="text-base font-medium">Countdowns</h1>
+        <h1 class="text-base font-medium">{{ 'admin.overview.title' | translate }}</h1>
         <span class="flex-1"></span>
+        <app-language-switch />
         <button
           hlmBtn
           variant="ghost"
           size="icon"
           (click)="backups.export()"
-          aria-label="Export as JSON"
+          [attr.aria-label]="'admin.overview.export' | translate"
         >
           <ng-icon name="lucideDownload" class="text-lg" />
         </button>
@@ -47,7 +58,7 @@ import { CountdownDialog, CountdownDialogContext, CountdownDialogResult } from '
           variant="ghost"
           size="icon"
           (click)="backups.importFromPicker()"
-          aria-label="Import from JSON"
+          [attr.aria-label]="'admin.overview.import' | translate"
         >
           <ng-icon name="lucideUpload" class="text-lg" />
         </button>
@@ -64,9 +75,10 @@ import { CountdownDialog, CountdownDialogContext, CountdownDialogResult } from '
             >
               <ng-icon name="lucideCalendar" class="text-muted-foreground shrink-0 text-lg" />
               <span class="min-w-0">
-                <span class="block font-mono tabular-nums">{{ countdown.date }}</span>
+                <span class="block font-mono tabular-nums">{{ countdown.date | localDate }}</span>
                 <span class="text-muted-foreground block truncate text-sm">
-                  {{ remainingLabel(countdown) }}
+                  @let remaining = remainingIn(countdown);
+                  {{ remaining.key | translate: { count: remaining.count } }}
                   @if (countdown.description) {
                     · {{ countdown.description }}
                   }
@@ -77,7 +89,9 @@ import { CountdownDialog, CountdownDialogContext, CountdownDialogResult } from '
               hlmBtn
               variant="ghost"
               size="icon"
-              [attr.aria-label]="'Delete countdown ' + countdown.date"
+              [attr.aria-label]="
+                'admin.overview.deleteCountdown' | translate: { date: countdown.date | localDate }
+              "
               (click)="remove(countdown)"
             >
               <ng-icon name="lucideTrash2" class="text-lg" />
@@ -88,8 +102,7 @@ import { CountdownDialog, CountdownDialogContext, CountdownDialogResult } from '
             class="text-muted-foreground px-4 py-12 text-center text-sm"
             data-testid="empty-state"
           >
-            No countdowns yet. Use the button below to add one, or drop a JSON backup onto this
-            page.
+            {{ 'admin.overview.empty' | translate }}
           </li>
         }
       </ul>
@@ -99,7 +112,7 @@ import { CountdownDialog, CountdownDialogContext, CountdownDialogResult } from '
       <div
         class="border-primary bg-background/90 pointer-events-none fixed top-safe-4 right-safe-4 bottom-safe-4 left-safe-4 z-20 flex items-center justify-center rounded-2xl border-2 border-dashed text-lg"
       >
-        Drop a JSON backup to import
+        {{ 'admin.overview.drop' | translate }}
       </div>
     }
 
@@ -107,7 +120,7 @@ import { CountdownDialog, CountdownDialogContext, CountdownDialogResult } from '
       hlmBtn
       size="icon-lg"
       class="fixed right-safe-6 bottom-safe-6 rounded-full shadow-lg"
-      aria-label="New countdown"
+      [attr.aria-label]="'admin.overview.newCountdown' | translate"
       (click)="create()"
       data-testid="add-countdown"
     >
@@ -121,18 +134,23 @@ export class AdminOverviewPage {
   protected readonly backups = inject(BackupActions);
   private readonly files = inject(FileTransferService);
   private readonly notifications = inject(NotificationService);
+  private readonly translate = inject(TranslateService);
+  private readonly language = inject(LanguageService);
 
   private readonly today = new Date();
 
   protected readonly countdowns = toSignal(this.repository.watchCountdowns(), { initialValue: [] });
   protected readonly dragging = signal(false);
 
-  protected remainingLabel(countdown: Countdown): string {
+  /** Which text says how far off a countdown is, and the number it needs. */
+  protected remainingIn(countdown: Countdown): { key: string; count: number } {
     const remaining = daysUntil(countdown.date, this.today);
     if (remaining === 0) {
-      return 'today';
+      return { key: 'counter.today', count: 0 };
     }
-    return remaining > 0 ? `in ${remaining} day(s)` : `${-remaining} day(s) ago`;
+    return remaining > 0
+      ? { key: 'admin.overview.inDays', count: remaining }
+      : { key: 'admin.overview.daysAgo', count: -remaining };
   }
 
   protected async create(): Promise<void> {
@@ -148,12 +166,14 @@ export class AdminOverviewPage {
 
   protected async remove(countdown: Countdown): Promise<void> {
     const confirmed = await openDialog<boolean, ConfirmDialogContext>(this.dialog, ConfirmDialog, {
-      title: 'Delete countdown?',
-      message: `${countdown.date} and all of its appointments will be removed.`,
+      title: this.translate.instant('admin.overview.deleteTitle'),
+      message: this.translate.instant('admin.overview.deleteMessage', {
+        date: this.language.formatDate(countdown.date),
+      }),
     });
     if (confirmed) {
       await this.repository.deleteCountdown(countdown.id!);
-      this.notifications.success('Countdown deleted.');
+      this.notifications.success(this.translate.instant('admin.overview.deleted'));
     }
   }
 

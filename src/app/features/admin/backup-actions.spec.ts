@@ -7,7 +7,9 @@ import { BACKUP_VERSION } from '../../core/models';
 import { FileTransferService } from '../../shared/file-transfer.service';
 import { stubDialog } from '../../../testing/dialog';
 import { provideNotificationSpy } from '../../../testing/notification';
+import { LanguageService } from '../../core/i18n/language.service';
 import { BackupActions } from './backup-actions';
+import { provideTestI18n } from '../../../testing/i18n';
 
 describe('BackupActions', () => {
   let db: HowLongDatabase;
@@ -41,6 +43,7 @@ describe('BackupActions', () => {
     notifications = notificationSpy.notifications;
     TestBed.configureTestingModule({
       providers: [
+        ...provideTestI18n(),
         { provide: HOW_LONG_DB, useValue: db },
         { provide: FileTransferService, useValue: files },
         notificationSpy.provider,
@@ -135,6 +138,58 @@ describe('BackupActions', () => {
       await actions.importFromPicker();
 
       expect(open).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('in German', () => {
+    beforeEach(async () => {
+      await TestBed.inject(LanguageService).use('de');
+    });
+
+    it('reports the export in German', async () => {
+      await repository.createCountdown({ date: '2026-12-24' });
+
+      await actions.export();
+
+      expect(notifications.success).toHaveBeenCalledWith('1 Countdown(s) exportiert.');
+    });
+
+    it('reports the import in German', async () => {
+      stubDialog('replace');
+
+      await actions.importFile(jsonFile(backupJson));
+
+      expect(notifications.success).toHaveBeenCalledWith(
+        '1 Countdown(s) und 1 Termin(e) importiert.',
+      );
+    });
+
+    it('explains a malformed file in German', async () => {
+      await actions.importFile(jsonFile('{ not json'));
+
+      expect(notifications.error).toHaveBeenCalledWith(
+        'Import fehlgeschlagen: Die Datei ist kein gültiges JSON.',
+      );
+    });
+
+    it('writes the days of a rejected backup the German way', async () => {
+      const broken = JSON.stringify({
+        version: BACKUP_VERSION,
+        countdowns: [
+          {
+            date: '2026-12-24',
+            appointments: [
+              { date: '2026-12-25', title: 'x', color: '#000000', icon: 'lucideFlag' },
+            ],
+          },
+        ],
+      });
+
+      await actions.importFile(jsonFile(broken));
+
+      expect(notifications.error).toHaveBeenCalledWith(
+        'Import fehlgeschlagen: countdowns[0].appointments[0].date (25.12.2026) muss vor dem Zieldatum 24.12.2026 liegen.',
+      );
     });
   });
 });
