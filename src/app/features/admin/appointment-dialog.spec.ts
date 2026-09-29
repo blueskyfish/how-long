@@ -1,4 +1,5 @@
 import { DIALOG_DATA } from '@angular/cdk/dialog';
+import { Platform } from '@angular/cdk/platform';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BrnDialogRef } from '@spartan-ng/brain/dialog';
 import { provideTestIcons } from '../../../testing/icons';
@@ -16,12 +17,26 @@ import { provideTestI18n } from '../../../testing/i18n';
 describe('AppointmentDialog', () => {
   const close = vi.fn();
 
-  function render(context: AppointmentDialogContext): ComponentFixture<AppointmentDialog> {
+  /** What `Platform` reports; jsdom itself is neither iOS nor Android. */
+  const DEVICES = {
+    phone: { IOS: false, ANDROID: true },
+    desktop: { IOS: false, ANDROID: false },
+  };
+
+  /**
+   * Renders the dialog. On a phone the icon group picker is the native `<select>`,
+   * which is what most specs below drive; `desktop` gets the app's own dropdown.
+   */
+  function render(
+    context: AppointmentDialogContext,
+    device: keyof typeof DEVICES = 'phone',
+  ): ComponentFixture<AppointmentDialog> {
     close.mockClear();
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
         ...provideTestI18n(),
+        { provide: Platform, useValue: DEVICES[device] },
         { provide: DIALOG_DATA, useValue: context },
         { provide: BrnDialogRef, useValue: { close } },
         provideTestIcons(),
@@ -300,6 +315,53 @@ describe('AppointmentDialog', () => {
 
       expect(groupSelect(fixture).value).toBe('General');
       expect(internals(fixture).form().value().icon).toBe('event');
+    });
+  });
+
+  describe('on a desktop', () => {
+    it('offers the icon groups in the app’s own dropdown, not a native select', () => {
+      const fixture = render({ targetDate: '2026-12-24' }, 'desktop');
+
+      expect(fixture.nativeElement.querySelector('select')).toBeNull();
+      expect(
+        fixture.nativeElement.querySelector('[data-testid="icon-group"] button')?.textContent,
+      ).toContain('General');
+    });
+
+    it('narrows the icons to the group picked in that dropdown', async () => {
+      const fixture = render({ targetDate: '2026-12-24' }, 'desktop');
+      fixture.nativeElement.querySelector('[data-testid="icon-group"] button').click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      (
+        document.querySelector('[data-testid="icon-group-option-Celebrations"]') as HTMLElement
+      ).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const labels = [
+        ...fixture.nativeElement.querySelectorAll('[data-testid="icon-grid"] [role="radio"]'),
+      ].map((button: Element) => button.getAttribute('aria-label'));
+      expect(labels).toContain('Cake');
+      expect(labels).not.toContain('Calendar');
+    });
+
+    it('returns the group shown on saving, so the caller can remember it', async () => {
+      const fixture = render({ targetDate: '2026-12-24' }, 'desktop');
+      fixture.nativeElement.querySelector('[data-testid="icon-group"] button').click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      (
+        document.querySelector('[data-testid="icon-group-option-Celebrations"]') as HTMLElement
+      ).click();
+      fixture.detectChanges();
+      fill(fixture, { title: 'Party', date: '2026-12-01' });
+
+      submit(fixture);
+
+      expect(close).toHaveBeenCalledWith(expect.objectContaining({ iconGroup: 'Celebrations' }));
     });
   });
 
