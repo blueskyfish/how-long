@@ -6,12 +6,24 @@
  * Only the Latin subsets are declared: German and English need nothing else, and the
  * browser downloads a subset only when a character of it is on the page.
  */
+/*
+ * Until Geist has loaded, text is set in Arial stretched to Geist's metrics, so the swap
+ * does not move the layout.
+ */
+@font-face {
+  font-family: 'Geist Fallback';
+  src: local('Arial');
+  size-adjust: 102.5%;
+  ascent-override: 98.5%;
+  descent-override: 28.3%;
+  line-gap-override: 0%;
+}
 @font-face {
   font-family: 'Geist Variable';
   font-style: normal;
   font-display: swap;
   font-weight: 100 900;
-  src: url('../node_modules/@fontsource-variable/geist/files/geist-latin-ext-wght-normal.woff2')
+  src: url('@fontsource-variable/geist/files/geist-latin-ext-wght-normal.woff2')
     format('woff2-variations');
   unicode-range:
     U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
@@ -23,7 +35,7 @@
   font-style: normal;
   font-display: swap;
   font-weight: 100 900;
-  src: url('../node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2')
+  src: url('@fontsource-variable/geist/files/geist-latin-wght-normal.woff2')
     format('woff2-variations');
   unicode-range:
     U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
@@ -125,7 +137,7 @@
 }
 
 @theme inline {
-  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Geist Variable', 'Geist Fallback', ui-sans-serif, system-ui, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
