@@ -10,11 +10,13 @@ import {
 } from '@angular/core';
 import { FormField, FormRoot, form, maxLength, required, validate } from '@angular/forms/signals';
 import { NgIcon } from '@ng-icons/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { BrnDialogRef, injectBrnDialogContext } from '@spartan-ng/brain/dialog';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmDialogFooter, HlmDialogHeader, HlmDialogTitle } from '@spartan-ng/helm/dialog';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
+import { LocalDatePipe } from '../../core/i18n/local-date.pipe';
 import { Appointment } from '../../core/models';
 import { isValidIsoDate, parseIsoDate, toIsoDate } from '../../core/services/date-utils';
 import {
@@ -51,26 +53,33 @@ export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'colo
     HlmDialogTitle,
     HlmInput,
     HlmLabel,
+    LocalDatePipe,
     NgIcon,
     FormField,
     FormRoot,
+    TranslatePipe,
   ],
   template: `
     <form [formRoot]="form" (submit)="save()" class="grid gap-6">
       <div hlmDialogHeader>
         <h2 hlmDialogTitle>
-          {{ context.appointment ? 'Edit appointment' : 'New appointment' }}
+          {{
+            (context.appointment ? 'appointmentDialog.titleEdit' : 'appointmentDialog.titleNew')
+              | translate
+          }}
         </h2>
       </div>
 
       <div class="grid gap-4">
         <div class="grid gap-2">
-          <label hlmLabel for="appointment-title">Title</label>
+          <label hlmLabel for="appointment-title">{{
+            'appointmentDialog.title' | translate
+          }}</label>
           <input hlmInput id="appointment-title" type="text" [formField]="form.title" />
         </div>
 
         <div class="grid gap-2">
-          <label hlmLabel for="appointment-date">Date</label>
+          <label hlmLabel for="appointment-date">{{ 'appointmentDialog.date' | translate }}</label>
           <input
             hlmInput
             id="appointment-date"
@@ -80,17 +89,25 @@ export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'colo
             (input)="dateTouched.set(true)"
             [formField]="form.date"
           />
-          <p class="text-muted-foreground text-xs">Must be before {{ context.targetDate }}.</p>
+          <p class="text-muted-foreground text-xs">
+            {{ 'appointmentDialog.dateHint' | translate: { date: context.targetDate | localDate } }}
+          </p>
           @if (dateTouched() && form.date().errors().some(isAfterTarget)) {
             <p class="text-destructive text-sm" data-testid="date-error">
-              The date must be before {{ context.targetDate }}.
+              {{
+                'appointmentDialog.dateError' | translate: { date: context.targetDate | localDate }
+              }}
             </p>
           }
         </div>
 
         <div class="grid gap-2">
-          <span hlmLabel>Colour</span>
-          <div class="flex flex-wrap gap-2" role="radiogroup" aria-label="Colour">
+          <span hlmLabel>{{ 'appointmentDialog.colour' | translate }}</span>
+          <div
+            class="flex flex-wrap gap-2"
+            role="radiogroup"
+            [attr.aria-label]="'appointmentDialog.colour' | translate"
+          >
             @for (color of colors; track color.value) {
               <button
                 type="button"
@@ -99,7 +116,7 @@ export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'colo
                 [style.background-color]="color.value"
                 [style.outline-color]="color.value"
                 [attr.aria-checked]="form.color().value() === color.value"
-                [attr.aria-label]="color.name"
+                [attr.aria-label]="'appointment.colors.' + color.name | translate"
                 (click)="form.color().value.set(color.value)"
               ></button>
             }
@@ -108,15 +125,19 @@ export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'colo
 
         <div class="grid gap-2">
           <div class="flex items-center justify-between gap-2">
-            <span hlmLabel id="appointment-icon-label">Icon</span>
+            <span hlmLabel id="appointment-icon-label">{{
+              'appointmentDialog.icon' | translate
+            }}</span>
             <select
               class="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-8 rounded-md border bg-transparent px-2 text-sm outline-none focus-visible:ring-3"
-              aria-label="Icon group"
+              [attr.aria-label]="'appointmentDialog.iconGroup' | translate"
               data-testid="icon-group"
               (change)="selectGroup($any($event.target).value)"
             >
               @for (group of iconGroups; track group) {
-                <option [value]="group" [selected]="group === iconGroup()">{{ group }}</option>
+                <option [value]="group" [selected]="group === iconGroup()">
+                  {{ 'appointment.groups.' + group | translate }}
+                </option>
               }
             </select>
           </div>
@@ -139,7 +160,7 @@ export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'colo
                 class="hover:bg-accent flex size-8 items-center justify-center rounded-md border border-transparent transition-colors focus-visible:outline-none aria-checked:border-current"
                 [style.color]="form.color().value()"
                 [attr.aria-checked]="form.icon().value() === icon.value"
-                [attr.aria-label]="icon.name"
+                [attr.aria-label]="'appointment.icons.' + icon.value | translate"
                 (click)="form.icon().value.set(icon.value)"
               >
                 <ng-icon [name]="icon.value" class="text-base" />
@@ -151,9 +172,11 @@ export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'colo
 
       <div hlmDialogFooter>
         <button hlmBtn variant="outline" type="button" (click)="cancel()" data-testid="cancel">
-          Cancel
+          {{ 'common.cancel' | translate }}
         </button>
-        <button hlmBtn type="submit" [disabled]="form().invalid()" data-testid="save">Save</button>
+        <button hlmBtn type="submit" [disabled]="form().invalid()" data-testid="save">
+          {{ 'common.save' | translate }}
+        </button>
       </div>
     </form>
   `,

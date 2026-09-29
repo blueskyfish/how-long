@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { NgIcon } from '@ng-icons/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { HlmDropdownMenuImports } from '@spartan-ng/helm/dropdown-menu';
+import { LocalDatePipe } from '../../core/i18n/local-date.pipe';
 import { Countdown } from '../../core/models';
 
 /**
@@ -16,7 +18,7 @@ import { Countdown } from '../../core/models';
 @Component({
   selector: 'app-countdown-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [HlmDropdownMenuImports, NgIcon],
+  imports: [HlmDropdownMenuImports, LocalDatePipe, NgIcon, TranslatePipe],
   template: `
     @if (hasChoice()) {
       <button
@@ -24,9 +26,9 @@ import { Countdown } from '../../core/models';
         align="center"
         class="hover:bg-accent focus-visible:ring-ring inline-flex items-center gap-1.5 rounded-md px-2 py-1 font-mono text-xl tabular-nums transition-colors focus-visible:ring-2 focus-visible:outline-none"
         data-testid="target-date"
-        [attr.aria-label]="'Countdown ' + selected().date + ', pick another'"
+        [attr.aria-label]="'home.pickAnother' | translate: { date: selected().date | localDate }"
       >
-        {{ selected().date }}
+        {{ selected().date | localDate }}
         <ng-icon name="lucideChevronDown" class="text-muted-foreground text-base" />
       </button>
 
@@ -50,7 +52,7 @@ import { Countdown } from '../../core/models';
                 [class.invisible]="countdown.id !== selected().id"
               />
               <span class="flex min-w-0 flex-1 flex-col items-start">
-                <span class="font-mono tabular-nums">{{ countdown.date }}</span>
+                <span class="font-mono tabular-nums">{{ countdown.date | localDate }}</span>
                 @if (countdown.description) {
                   <span class="text-muted-foreground max-w-full truncate text-xs">
                     {{ countdown.description }}
@@ -62,7 +64,9 @@ import { Countdown } from '../../core/models';
         </div>
       </ng-template>
     } @else {
-      <p class="font-mono text-xl tabular-nums" data-testid="target-date">{{ selected().date }}</p>
+      <p class="font-mono text-xl tabular-nums" data-testid="target-date">
+        {{ selected().date | localDate }}
+      </p>
     }
   `,
 })

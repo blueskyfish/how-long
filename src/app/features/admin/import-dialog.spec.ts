@@ -3,7 +3,9 @@ import { TestBed } from '@angular/core/testing';
 import { BrnDialogRef } from '@spartan-ng/brain/dialog';
 import { describe, expect, it, vi } from 'vitest';
 import { BACKUP_VERSION, Backup } from '../../core/models';
+import { LanguageService } from '../../core/i18n/language.service';
 import { ImportDialog, ImportDialogContext } from './import-dialog';
+import { provideTestI18n } from '../../../testing/i18n';
 
 describe('ImportDialog', () => {
   const close = vi.fn();
@@ -28,6 +30,7 @@ describe('ImportDialog', () => {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
+        ...provideTestI18n(),
         { provide: DIALOG_DATA, useValue: context },
         { provide: BrnDialogRef, useValue: { close } },
       ],
@@ -74,5 +77,20 @@ describe('ImportDialog', () => {
     fixture.nativeElement.querySelector('[data-testid="cancel"]').click();
 
     expect(close).toHaveBeenCalledWith(undefined);
+  });
+
+  it('explains the choice in German', async () => {
+    const fixture = render({ backup, existingCountdowns: 3 });
+    await TestBed.inject(LanguageService).use('de');
+    fixture.detectChanges();
+
+    const text: string = fixture.nativeElement.textContent.replace(/\s+/g, ' ');
+    expect(text).toContain('Die Datei enthält 2 Countdown(s) und 2 Termin(e).');
+    expect(text).toContain(
+      'Beim Ersetzen werden die 3 auf diesem Gerät gespeicherten Countdown(s) verworfen.',
+    );
+    expect(fixture.nativeElement.querySelector('[data-testid="replace"]').textContent.trim()).toBe(
+      'Alle ersetzen',
+    );
   });
 });

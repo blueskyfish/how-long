@@ -6,6 +6,7 @@ import {
   input,
   viewChild,
 } from '@angular/core';
+import { translate } from '@ngx-translate/core';
 
 /**
  * The headline of the start page: the remaining day count inside a circle.
@@ -64,16 +65,19 @@ export class DayCounter {
 
   protected readonly count = computed(() => Math.abs(this.days()));
 
-  protected readonly label = computed(() => {
+  private readonly labelKey = computed(() => {
     const days = this.days();
     if (days === 0) {
-      return 'today';
+      return 'counter.today';
     }
     if (days < 0) {
-      return days === -1 ? 'day ago' : 'days ago';
+      return days === -1 ? 'counter.dayAgo' : 'counter.daysAgo';
     }
-    return days === 1 ? 'day to go' : 'days to go';
+    return days === 1 ? 'counter.dayToGo' : 'counter.daysToGo';
   });
+
+  /** A signal: it follows the day count and the language alike. */
+  protected readonly label = translate(() => this.labelKey());
 
   /**
    * Sized in `cqw` against the circle itself, so the number keeps its proportions

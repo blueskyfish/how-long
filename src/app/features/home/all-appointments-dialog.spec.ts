@@ -4,7 +4,9 @@ import { BrnDialogRef } from '@spartan-ng/brain/dialog';
 import { provideTestIcons } from '../../../testing/icons';
 import { describe, expect, it, vi } from 'vitest';
 import { Appointment } from '../../core/models';
+import { LanguageService } from '../../core/i18n/language.service';
 import { AllAppointmentsDialog, AllAppointmentsDialogContext } from './all-appointments-dialog';
+import { provideTestI18n } from '../../../testing/i18n';
 
 describe('AllAppointmentsDialog', () => {
   const close = vi.fn();
@@ -33,6 +35,7 @@ describe('AllAppointmentsDialog', () => {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
+        ...provideTestI18n(),
         { provide: DIALOG_DATA, useValue: context },
         { provide: BrnDialogRef, useValue: { close } },
         provideTestIcons(),
@@ -98,5 +101,19 @@ describe('AllAppointmentsDialog', () => {
     fixture.nativeElement.querySelector('[data-testid="close"]').click();
 
     expect(close).toHaveBeenCalled();
+  });
+
+  it('speaks German and writes the dates the German way', async () => {
+    const fixture = render({ targetDate: '2026-12-24', appointments });
+    await TestBed.inject(LanguageService).use('de');
+    fixture.detectChanges();
+
+    const text: string = fixture.nativeElement.textContent.replace(/\s+/g, ' ');
+    expect(text).toContain('Alle Termine');
+    expect(text).toContain('Bis zum 24.12.2026');
+    expect(text).toContain('01.12.2026');
+    expect(fixture.nativeElement.querySelector('[data-testid="close"]').textContent.trim()).toBe(
+      'Schließen',
+    );
   });
 });

@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { BrnDialogRef, injectBrnDialogContext } from '@spartan-ng/brain/dialog';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmDialogFooter, HlmDialogHeader, HlmDialogTitle } from '@spartan-ng/helm/dialog';
 import { Appointment } from '../../core/models';
+import { LocalDatePipe } from '../../core/i18n/local-date.pipe';
 import { AppointmentList } from '../../shared/appointment-list';
 
 export interface AllAppointmentsDialogContext {
@@ -14,14 +16,24 @@ export interface AllAppointmentsDialogContext {
 @Component({
   selector: 'app-all-appointments-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AppointmentList, HlmButton, HlmDialogFooter, HlmDialogHeader, HlmDialogTitle],
+  imports: [
+    AppointmentList,
+    HlmButton,
+    HlmDialogFooter,
+    HlmDialogHeader,
+    HlmDialogTitle,
+    LocalDatePipe,
+    TranslatePipe,
+  ],
   // The dialog host is not a grid on its own, so without this header, list and
   // footer would touch; `gap-6` matches the form dialogs.
   host: { class: 'grid gap-6' },
   template: `
     <div hlmDialogHeader>
-      <h2 hlmDialogTitle>All appointments</h2>
-      <p class="text-muted-foreground text-sm">Leading up to {{ context.targetDate }}</p>
+      <h2 hlmDialogTitle>{{ 'home.allAppointments.title' | translate }}</h2>
+      <p class="text-muted-foreground text-sm">
+        {{ 'home.allAppointments.leadingUp' | translate: { date: context.targetDate | localDate } }}
+      </p>
     </div>
     <!--
       Ten rows, then a scrollbar: a row is 2.25rem high with a 0.25rem gap
@@ -35,7 +47,9 @@ export interface AllAppointmentsDialogContext {
       <app-appointment-list [appointments]="context.appointments" />
     </div>
     <div hlmDialogFooter>
-      <button hlmBtn variant="outline" (click)="close()" data-testid="close">Close</button>
+      <button hlmBtn variant="outline" (click)="close()" data-testid="close">
+        {{ 'common.close' | translate }}
+      </button>
     </div>
   `,
 })

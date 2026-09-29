@@ -4,12 +4,17 @@ import { SwUpdate } from '@angular/service-worker';
 import { describe, expect, it } from 'vitest';
 import { App } from './app';
 import { routes } from './app.routes';
+import { provideTestI18n } from '../testing/i18n';
 
 describe('App', () => {
   it('creates the shell and renders the router outlet', async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideRouter(routes), { provide: SwUpdate, useValue: { isEnabled: false } }],
+      providers: [
+        ...provideTestI18n(),
+        provideRouter(routes),
+        { provide: SwUpdate, useValue: { isEnabled: false } },
+      ],
     }).compileComponents();
 
     const fixture = TestBed.createComponent(App);

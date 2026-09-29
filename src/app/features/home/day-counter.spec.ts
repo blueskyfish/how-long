@@ -1,9 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { provideTestI18n } from '../../../testing/i18n';
 import { DayCounter } from './day-counter';
 
 describe('DayCounter', () => {
   let fixture: ComponentFixture<DayCounter>;
+
+  beforeEach(() => TestBed.configureTestingModule({ providers: [...provideTestI18n()] }));
 
   function render(days: number) {
     fixture = TestBed.createComponent(DayCounter);

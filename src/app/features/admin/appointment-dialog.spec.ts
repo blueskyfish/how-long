@@ -9,7 +9,9 @@ import {
   DEFAULT_APPOINTMENT_COLOR,
   DEFAULT_APPOINTMENT_ICON,
 } from '../../shared/appointment-style';
+import { LanguageService } from '../../core/i18n/language.service';
 import { AppointmentDialog, AppointmentDialogContext } from './appointment-dialog';
+import { provideTestI18n } from '../../../testing/i18n';
 
 describe('AppointmentDialog', () => {
   const close = vi.fn();
@@ -19,6 +21,7 @@ describe('AppointmentDialog', () => {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
+        ...provideTestI18n(),
         { provide: DIALOG_DATA, useValue: context },
         { provide: BrnDialogRef, useValue: { close } },
         provideTestIcons(),
@@ -297,6 +300,62 @@ describe('AppointmentDialog', () => {
 
       expect(groupSelect(fixture).value).toBe('General');
       expect(internals(fixture).form().value().icon).toBe('event');
+    });
+  });
+
+  describe('in German', () => {
+    async function renderGerman(context: AppointmentDialogContext) {
+      const fixture = render(context);
+      await TestBed.inject(LanguageService).use('de');
+      fixture.detectChanges();
+      return fixture;
+    }
+
+    it('speaks German and writes the target date the German way', async () => {
+      const fixture = await renderGerman({ targetDate: '2026-12-24' });
+
+      const text: string = fixture.nativeElement.textContent.replace(/\s+/g, ' ');
+      expect(text).toContain('Neuer Termin');
+      expect(text).toContain('Titel');
+      expect(text).toContain('Muss vor dem 24.12.2026 liegen.');
+    });
+
+    it('names the colours, icons and groups in German', async () => {
+      const fixture = await renderGerman({ targetDate: '2026-12-24' });
+
+      const label = (selector: string) =>
+        fixture.nativeElement.querySelector(selector)?.getAttribute('aria-label');
+      expect(label('[role="radiogroup"] [role="radio"]')).toBe('Azurblau');
+      expect(label('[data-testid="icon-grid"] [role="radio"]')).toBe('Kalender');
+      expect(label('[data-testid="icon-group"]')).toBe('Symbolgruppe');
+      const groups = Array.from(
+        (fixture.nativeElement.querySelector('[data-testid="icon-group"]') as HTMLSelectElement)
+          .options,
+        (option) => option.textContent?.trim(),
+      );
+      expect(groups).toContain('Schule & Arbeit');
+    });
+
+    it('keeps the icon group value stable while showing its German name', async () => {
+      const fixture = await renderGerman({ targetDate: '2026-12-24', iconGroup: 'Celebrations' });
+
+      const select = fixture.nativeElement.querySelector(
+        '[data-testid="icon-group"]',
+      ) as HTMLSelectElement;
+      expect(select.value).toBe('Celebrations');
+      expect(select.selectedOptions[0].textContent?.trim()).toBe('Feiern');
+    });
+
+    it('explains a date on or after the target in German', async () => {
+      const fixture = await renderGerman({ targetDate: '2026-12-24' });
+      fill(fixture, { title: 'Too late', date: '2026-12-24' });
+
+      submit(fixture);
+      fixture.detectChanges();
+
+      expect(
+        fixture.nativeElement.querySelector('[data-testid="date-error"]').textContent.trim(),
+      ).toBe('Das Datum muss vor dem 24.12.2026 liegen.');
     });
   });
 });

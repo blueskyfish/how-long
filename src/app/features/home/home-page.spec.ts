@@ -5,6 +5,7 @@ import { provideRouter } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CountdownRepository } from '../../core/data/countdown-repository';
 import { HOW_LONG_DB, HowLongDatabase } from '../../core/data/db';
+import { LanguageService } from '../../core/i18n/language.service';
 import { toIsoDate } from '../../core/services/date-utils';
 import { settle } from '../../../testing/settle';
 import { memoryStorage } from '../../../testing/storage';
@@ -13,6 +14,7 @@ import { HomePage } from './home-page';
 import { COUNTDOWN_STORAGE } from './remembered-countdown';
 import { provideTestIcons } from '../../../testing/icons';
 import { touch } from '../../../testing/touch';
+import { provideTestI18n } from '../../../testing/i18n';
 
 describe('HomePage', () => {
   let db: HowLongDatabase;
@@ -32,6 +34,7 @@ describe('HomePage', () => {
     storage = memoryStorage();
     TestBed.configureTestingModule({
       providers: [
+        ...provideTestI18n(),
         { provide: HOW_LONG_DB, useValue: db },
         { provide: COUNTDOWN_STORAGE, useValue: storage },
         provideRouter([]),
@@ -236,6 +239,7 @@ describe('HomePage', () => {
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({
         providers: [
+          ...provideTestI18n(),
           { provide: HOW_LONG_DB, useValue: db },
           { provide: COUNTDOWN_STORAGE, useValue: storage },
           provideRouter([]),
@@ -398,6 +402,53 @@ describe('HomePage', () => {
     expect(indicator.classList).toContain('opacity-0');
     expect(indicator.classList).toContain('-translate-y-12');
     expect(indicator.hasAttribute('data-pulling')).toBe(false);
+  });
+
+  describe('in German', () => {
+    beforeEach(async () => {
+      await TestBed.inject(LanguageService).use('de');
+    });
+
+    it('translates the texts and writes the target date as DD.MM.YYYY', async () => {
+      await repository.createCountdown({ date: '2099-12-24', description: 'Weihnachten' });
+
+      await render();
+
+      expect(text('day-label')).toBe('Tage übrig');
+      expect(text('target-date')).toBe('24.12.2099');
+      expect(fixture.nativeElement.querySelector('[data-testid="admin-fab"]').ariaLabel).toBe(
+        'Verwaltung',
+      );
+    });
+
+    it('writes the dates of the appointments the same way, keeping the ISO date machine-readable', async () => {
+      const countdownId = await repository.createCountdown({ date: '2099-12-24' });
+      await addAppointment(countdownId, '2099-12-01', 'Advent');
+
+      await render();
+
+      const time = fixture.nativeElement.querySelector('app-appointment-list time');
+      expect(time.textContent.trim()).toBe('01.12.2099');
+      expect(time.getAttribute('datetime')).toBe('2099-12-01');
+    });
+
+    it('says so in German when nothing is set up', async () => {
+      await render();
+
+      expect(text('empty-state')).toBe('Noch kein Countdown eingerichtet.');
+    });
+
+    it('switches the whole page when the language changes while it is open', async () => {
+      await repository.createCountdown({ date: '2099-12-24' });
+      await render();
+      expect(text('target-date')).toBe('24.12.2099');
+
+      await TestBed.inject(LanguageService).use('en');
+      await settle(fixture);
+
+      expect(text('target-date')).toBe('2099-12-24');
+      expect(text('day-label')).toBe('days to go');
+    });
   });
 
   describe('refreshing', () => {

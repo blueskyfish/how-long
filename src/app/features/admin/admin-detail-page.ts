@@ -2,10 +2,13 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, input } f
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmDialogService } from '@spartan-ng/helm/dialog';
 import { of, switchMap } from 'rxjs';
 import { CountdownRepository } from '../../core/data/countdown-repository';
+import { LanguageService } from '../../core/i18n/language.service';
+import { LocalDatePipe } from '../../core/i18n/local-date.pipe';
 import { Appointment } from '../../core/models';
 import { ConfirmDialog, ConfirmDialogContext } from '../../shared/confirm-dialog';
 import { openDialog } from '../../shared/dialog';
@@ -22,17 +25,23 @@ import { RememberedIconGroup } from './remembered-icon-group';
 @Component({
   selector: 'app-admin-detail-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [HlmButton, NgIcon, RouterLink],
+  imports: [HlmButton, LocalDatePipe, NgIcon, RouterLink, TranslatePipe],
   template: `
     <header
       class="bg-background/80 border-border sticky top-0 z-10 border-b px-safe-3 pt-safe-0 backdrop-blur"
     >
       <div class="flex h-14 items-center gap-2">
-        <a hlmBtn variant="ghost" size="icon" routerLink="/admin" aria-label="Back to overview">
+        <a
+          hlmBtn
+          variant="ghost"
+          size="icon"
+          routerLink="/admin"
+          [attr.aria-label]="'admin.detail.back' | translate"
+        >
           <ng-icon name="lucideArrowLeft" class="text-lg" />
         </a>
         <h1 class="font-mono text-base tabular-nums" data-testid="target-date">
-          {{ countdown()?.date ?? '…' }}
+          {{ (countdown()?.date | localDate) || '…' }}
         </h1>
         <span class="flex-1"></span>
         @if (countdown()) {
@@ -41,7 +50,7 @@ import { RememberedIconGroup } from './remembered-icon-group';
             variant="ghost"
             size="icon"
             (click)="editCountdown()"
-            aria-label="Edit countdown"
+            [attr.aria-label]="'admin.detail.editCountdown' | translate"
           >
             <ng-icon name="lucidePencil" class="text-lg" />
           </button>
@@ -69,14 +78,16 @@ import { RememberedIconGroup } from './remembered-icon-group';
               <span class="min-w-0 flex-1">
                 <span class="block truncate">{{ appointment.title }}</span>
                 <span class="text-muted-foreground block font-mono text-sm tabular-nums">
-                  {{ appointment.date }}
+                  {{ appointment.date | localDate }}
                 </span>
               </span>
               <button
                 hlmBtn
                 variant="ghost"
                 size="icon"
-                [attr.aria-label]="'Edit ' + appointment.title"
+                [attr.aria-label]="
+                  'admin.detail.editAppointment' | translate: { title: appointment.title }
+                "
                 (click)="editAppointment(appointment)"
               >
                 <ng-icon name="lucidePencil" class="text-lg" />
@@ -85,7 +96,9 @@ import { RememberedIconGroup } from './remembered-icon-group';
                 hlmBtn
                 variant="ghost"
                 size="icon"
-                [attr.aria-label]="'Delete ' + appointment.title"
+                [attr.aria-label]="
+                  'admin.detail.deleteAppointment' | translate: { title: appointment.title }
+                "
                 (click)="deleteAppointment(appointment)"
               >
                 <ng-icon name="lucideTrash2" class="text-lg" />
@@ -96,13 +109,13 @@ import { RememberedIconGroup } from './remembered-icon-group';
               class="text-muted-foreground px-4 py-12 text-center text-sm"
               data-testid="empty-state"
             >
-              No appointments yet.
+              {{ 'appointments.none' | translate }}
             </li>
           }
         </ul>
       } @else {
         <p class="text-muted-foreground px-4 py-12 text-center text-sm" data-testid="not-found">
-          This countdown no longer exists.
+          {{ 'admin.detail.notFound' | translate }}
         </p>
       }
     </main>
@@ -112,7 +125,7 @@ import { RememberedIconGroup } from './remembered-icon-group';
         hlmBtn
         size="icon-lg"
         class="fixed right-safe-6 bottom-safe-6 rounded-full shadow-lg"
-        aria-label="New appointment"
+        [attr.aria-label]="'admin.detail.newAppointment' | translate"
         (click)="createAppointment()"
         data-testid="add-appointment"
       >
@@ -129,6 +142,8 @@ export class AdminDetailPage {
   private readonly dialog = inject(HlmDialogService);
   private readonly notifications = inject(NotificationService);
   private readonly iconGroups = inject(RememberedIconGroup);
+  private readonly translate = inject(TranslateService);
+  private readonly language = inject(LanguageService);
 
   private readonly countdownId = computed(() => Number(this.id()));
 
@@ -206,12 +221,12 @@ export class AdminDetailPage {
 
   protected async deleteAppointment(appointment: Appointment): Promise<void> {
     const confirmed = await openDialog<boolean, ConfirmDialogContext>(this.dialog, ConfirmDialog, {
-      title: 'Delete appointment?',
-      message: `"${appointment.title}" will be removed.`,
+      title: this.translate.instant('admin.detail.deleteTitle'),
+      message: this.translate.instant('admin.detail.deleteMessage', { title: appointment.title }),
     });
     if (confirmed) {
       await this.repository.deleteAppointment(appointment.id!);
-      this.notifications.success('Appointment deleted.');
+      this.notifications.success(this.translate.instant('admin.detail.deleted'));
     }
   }
 
@@ -226,7 +241,7 @@ export class AdminDetailPage {
     try {
       await action();
     } catch (error) {
-      this.notifications.error((error as Error).message);
+      this.notifications.error(this.language.errorMessage(error));
     }
   }
 }

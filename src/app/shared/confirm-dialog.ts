@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { BrnDialogRef, injectBrnDialogContext } from '@spartan-ng/brain/dialog';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmDialogFooter, HlmDialogHeader, HlmDialogTitle } from '@spartan-ng/helm/dialog';
@@ -13,16 +14,18 @@ export interface ConfirmDialogContext {
 @Component({
   selector: 'app-confirm-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [HlmButton, HlmDialogFooter, HlmDialogHeader, HlmDialogTitle],
+  imports: [HlmButton, HlmDialogFooter, HlmDialogHeader, HlmDialogTitle, TranslatePipe],
   template: `
     <div hlmDialogHeader>
       <h2 hlmDialogTitle>{{ context.title }}</h2>
       <p class="text-muted-foreground text-sm wrap-anywhere">{{ context.message }}</p>
     </div>
     <div hlmDialogFooter>
-      <button hlmBtn variant="outline" (click)="close(false)" data-testid="cancel">Cancel</button>
+      <button hlmBtn variant="outline" (click)="close(false)" data-testid="cancel">
+        {{ 'common.cancel' | translate }}
+      </button>
       <button hlmBtn variant="destructive" (click)="close(true)" data-testid="confirm">
-        {{ context.confirmLabel ?? 'Delete' }}
+        {{ context.confirmLabel ?? ('common.delete' | translate) }}
       </button>
     </div>
   `,

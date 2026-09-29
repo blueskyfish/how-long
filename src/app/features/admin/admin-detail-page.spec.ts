@@ -6,9 +6,11 @@ import { HOW_LONG_DB, HowLongDatabase } from '../../core/data/db';
 import { settle } from '../../../testing/settle';
 import { stubDialog } from '../../../testing/dialog';
 import { provideNotificationSpy } from '../../../testing/notification';
+import { LanguageService } from '../../core/i18n/language.service';
 import { AdminDetailPage } from './admin-detail-page';
 import { AppointmentDialogContext } from './appointment-dialog';
 import { provideTestIcons } from '../../../testing/icons';
+import { provideTestI18n } from '../../../testing/i18n';
 
 describe('AdminDetailPage', () => {
   let db: HowLongDatabase;
@@ -23,6 +25,7 @@ describe('AdminDetailPage', () => {
     notifications = notificationSpy.notifications;
     TestBed.configureTestingModule({
       providers: [
+        ...provideTestI18n(),
         { provide: HOW_LONG_DB, useValue: db },
         provideRouter([]),
         provideTestIcons(),
@@ -241,5 +244,46 @@ describe('AdminDetailPage', () => {
     expect(notifications.error).toHaveBeenCalledWith(
       expect.stringContaining('must be before the target date'),
     );
+  });
+
+  describe('in German', () => {
+    beforeEach(async () => {
+      await TestBed.inject(LanguageService).use('de');
+    });
+
+    it('writes the dates as DD.MM.YYYY and labels the buttons in German', async () => {
+      await addAppointment('2026-12-01', 'Advent');
+
+      await render();
+
+      const page: HTMLElement = fixture.nativeElement;
+      expect(page.querySelector('[data-testid="target-date"]')?.textContent?.trim()).toBe(
+        '24.12.2026',
+      );
+      expect(page.querySelector('main li')?.textContent).toContain('01.12.2026');
+      expect(page.querySelector('[aria-label="Advent bearbeiten"]')).toBeTruthy();
+      expect(page.querySelector('[aria-label="Advent löschen"]')).toBeTruthy();
+      expect(page.querySelector('[aria-label="Neuer Termin"]')).toBeTruthy();
+    });
+
+    it('says in German when the countdown no longer exists', async () => {
+      await render(4711);
+
+      expect(
+        fixture.nativeElement.querySelector('[data-testid="not-found"]').textContent,
+      ).toContain('Diesen Countdown gibt es nicht mehr.');
+    });
+
+    it('reports a violated invariant in German, with the days written the German way', async () => {
+      await render();
+      stubDialog({ date: '2026-12-24', title: 'Too late', color: '#e53935', icon: 'lucideStar' });
+
+      fixture.nativeElement.querySelector('[data-testid="add-appointment"]').click();
+      await settle(fixture);
+
+      expect(notifications.error).toHaveBeenCalledWith(
+        'Der Termin am 24.12.2026 muss vor dem Zieldatum 24.12.2026 liegen',
+      );
+    });
   });
 });

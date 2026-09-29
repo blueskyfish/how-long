@@ -17,6 +17,9 @@ between devices as a JSON file you download and drop back in.
 - **Installable** — web app manifest and a service worker, so it works offline once loaded.
   When a newer version has been published, a toast offers to update.
 - **Light and dark** — follows the operating system's colour scheme.
+- **German and English** — opens in the saved choice, else the browser's language, else
+  English; a switch in the administration header changes it at once and is kept per device.
+  Dates read `DD.MM.YYYY` in German and `YYYY-MM-DD` in English.
 
 ## Running it
 
@@ -61,6 +64,7 @@ Merging stays a manual step on GitHub.
 | UI        | [Spartan UI](https://spartan.ng) (`@spartan-ng/brain` + generated helm components) |
 | Styling   | Tailwind CSS 4, "Azure & Blue" tokens in [`src/styles.css`](src/styles.css)        |
 | Icons     | [Lucide](https://lucide.dev) via `@ng-icons`                                       |
+| Languages | [ngx-translate](https://ngx-translate.org) 18, texts in `public/assets/i18n/`      |
 | Storage   | IndexedDB through [Dexie](https://dexie.org), with `liveQuery`                     |
 | PWA       | `@angular/service-worker` + `public/manifest.webmanifest`                          |
 | Tests     | Vitest + jsdom + `fake-indexeddb`                                                  |
@@ -73,12 +77,14 @@ src/app/
     models/       Countdown, Appointment, Backup — the domain types
     data/         Dexie schema (db.ts) and CountdownRepository
     services/     date-utils.ts, backup.service.ts
+    i18n/         LanguageService, date format, localDate pipe, LocalizedError
   features/
     home/         the countdown page, its day-counter circle, countdown picker and overlay
     admin/        overview, detail, and the create/edit dialogs
   shared/         appointment list, palette, dialogs, file and toast services
   ui/             Spartan helm components, generated — see "Regenerating" below
-src/testing/      helpers shared by specs (settle, dialog stub, notification spy)
+src/testing/      helpers shared by specs (settle, dialog stub, notification spy, i18n)
+public/assets/i18n/  en.json and de.json, one file per language
 ```
 
 ### Data model
@@ -177,6 +183,32 @@ Database ids are not exported; they are reassigned on import. A file is validate
 before anything is written, and the restore itself runs in one transaction, so a malformed
 file can never leave the database half-imported.
 
+## Languages
+
+The texts live in [`public/assets/i18n/en.json`](public/assets/i18n/en.json) and
+[`de.json`](public/assets/i18n/de.json), loaded over HTTP relative to the base href, so the
+build works under any path. `ngsw-config.json` prefetches both, which keeps the language
+switch working offline. `LanguageService` holds the language as a signal (`current`), loads
+it before the first render, saves the choice in `localStorage` and sets `<html lang>`.
+
+- **In a template** use the `translate` pipe (`'home.emptyState' | translate`), which follows the
+  language on its own. Fill placeholders with `translate: { count: n }`.
+- **In a class** read `translate(() => key)` from `@ngx-translate/core` for a text that
+  follows signals, or `TranslateService.instant` for a one-off text such as a toast.
+- **Dates** go through the `localDate` pipe or `LanguageService.formatDate`; `<time datetime>`
+  and everything stored keep the ISO form.
+- **Errors the user reads** are `LocalizedError`s: `message` stays English for logs and
+  specs, `key` and `params` are translated by `LanguageService.errorMessage`. A parameter that
+  is a valid `yyyy-mm-dd` day is written in the current language's format.
+
+A spec fails when the two files differ in keys or placeholders, or when a colour, icon group or
+icon has no name in both. The manifest and the `<title>` stay English: they are read before the
+app runs. The native date field follows the browser's own locale, not the app's language.
+
+To add a language, add it to `LANGUAGES` in
+[`languages.ts`](src/app/core/i18n/languages.ts), give `formatDate` its date order, copy
+`en.json` to the new code and translate it.
+
 ## Testing
 
 `npm test` runs the whole suite. The specs cover the date arithmetic, the repository
@@ -210,9 +242,10 @@ Appointment icons are Lucide names, offered in six groups of 20 to 30 that the a
 form switches between with a dropdown. Editing opens on the group of the appointment's icon.
 A new appointment opens on the group used when the last one was saved in the same countdown,
 or on the first group; opening another countdown forgets it. That memory lives in
-[`RememberedIconGroup`](src/app/features/admin/remembered-icon-group.ts), in memory only. To offer another one, add it with its label and group
+[`RememberedIconGroup`](src/app/features/admin/remembered-icon-group.ts), in memory only. To offer another one, add it with its English label and group
 to `APPOINTMENT_ICONS` in
-[`src/app/shared/appointment-style.ts`](src/app/shared/appointment-style.ts), then run
+[`src/app/shared/appointment-style.ts`](src/app/shared/appointment-style.ts), then add its name under `appointment.icons.<value>` in both language files (a spec checks
+that the English one equals the label) and run
 
 ```bash
 npm run icons:generate

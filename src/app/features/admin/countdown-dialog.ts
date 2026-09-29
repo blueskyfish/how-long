@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormField, FormRoot, form, maxLength, required, validate } from '@angular/forms/signals';
+import { TranslatePipe } from '@ngx-translate/core';
 import { BrnDialogRef, injectBrnDialogContext } from '@spartan-ng/brain/dialog';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmDialogFooter, HlmDialogHeader, HlmDialogTitle } from '@spartan-ng/helm/dialog';
@@ -27,16 +28,22 @@ export type CountdownDialogResult = Pick<Countdown, 'date' | 'description'>;
     HlmLabel,
     FormField,
     FormRoot,
+    TranslatePipe,
   ],
   template: `
     <form [formRoot]="form" (submit)="save()" class="grid gap-6">
       <div hlmDialogHeader>
-        <h2 hlmDialogTitle>{{ context.countdown ? 'Edit countdown' : 'New countdown' }}</h2>
+        <h2 hlmDialogTitle>
+          {{
+            (context.countdown ? 'countdownDialog.titleEdit' : 'countdownDialog.titleNew')
+              | translate
+          }}
+        </h2>
       </div>
 
       <div class="grid gap-4">
         <div class="grid gap-2">
-          <label hlmLabel for="countdown-date">Target date</label>
+          <label hlmLabel for="countdown-date">{{ 'countdownDialog.date' | translate }}</label>
           <input
             hlmInput
             id="countdown-date"
@@ -47,28 +54,32 @@ export type CountdownDialogResult = Pick<Countdown, 'date' | 'description'>;
           />
           @if (dateTouched() && form.date().invalid()) {
             <p class="text-destructive text-sm" data-testid="date-error">
-              Pick a valid target date.
+              {{ 'countdownDialog.dateError' | translate }}
             </p>
           }
         </div>
 
         <div class="grid gap-2">
-          <label hlmLabel for="countdown-description">Description</label>
+          <label hlmLabel for="countdown-description">
+            {{ 'countdownDialog.description' | translate }}
+          </label>
           <input
             hlmInput
             id="countdown-description"
             type="text"
             [formField]="form.description"
-            placeholder="Optional"
+            [placeholder]="'countdownDialog.optional' | translate"
           />
         </div>
       </div>
 
       <div hlmDialogFooter>
         <button hlmBtn variant="outline" type="button" (click)="cancel()" data-testid="cancel">
-          Cancel
+          {{ 'common.cancel' | translate }}
         </button>
-        <button hlmBtn type="submit" [disabled]="form().invalid()" data-testid="save">Save</button>
+        <button hlmBtn type="submit" [disabled]="form().invalid()" data-testid="save">
+          {{ 'common.save' | translate }}
+        </button>
       </div>
     </form>
   `,
