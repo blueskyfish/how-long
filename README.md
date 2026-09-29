@@ -63,6 +63,7 @@ Merging stays a manual step on GitHub.
 | Framework | Angular 22, standalone components, signals, zoneless change detection              |
 | UI        | [Spartan UI](https://spartan.ng) (`@spartan-ng/brain` + generated helm components) |
 | Styling   | Tailwind CSS 4, "Azure & Blue" tokens in [`src/styles.css`](src/styles.css)        |
+| Font      | Geist (variable, SIL OFL), self-hosted via `@fontsource-variable/geist`            |
 | Icons     | [Lucide](https://lucide.dev) via `@ng-icons`                                       |
 | Languages | [ngx-translate](https://ngx-translate.org) 18, texts in `public/assets/i18n/`      |
 | Storage   | IndexedDB through [Dexie](https://dexie.org), with `liveQuery`                     |
