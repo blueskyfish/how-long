@@ -46,13 +46,17 @@ const URGENT_WITHIN_DAYS = 3;
   template: `
     <!--
       Follows the finger down from under the top edge while the page is pulled,
-      turning with it, and slides back once released.
+      turning with it, and slides back once released. The resting state (hidden,
+      pushed above the edge) is static markup rather than a binding: with
+      zoneless change detection a freshly inserted page is painted once before
+      its first binding pass, and a binding-only rest state flashed the
+      indicator when coming back from the administration.
     -->
     <div
-      class="top-safe-0 pointer-events-none fixed inset-x-0 z-10 flex justify-center transition-[transform,opacity] duration-300"
+      class="top-safe-0 pointer-events-none fixed inset-x-0 z-10 flex -translate-y-12 justify-center opacity-0 transition-[translate,opacity] duration-300 data-pulling:opacity-100"
+      [attr.data-pulling]="pull.distance() > 0 ? '' : null"
       [style.transition]="pull.distance() === 0 ? null : 'none'"
-      [class.opacity-0]="pull.distance() === 0"
-      [style.transform]="'translateY(' + (pull.distance() - 48) + 'px)'"
+      [style.translate]="pull.distance() > 0 ? '0 ' + (pull.distance() - 48) + 'px' : null"
       aria-hidden="true"
       data-testid="pull-indicator"
     >

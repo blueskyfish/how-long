@@ -389,6 +389,17 @@ describe('HomePage', () => {
     });
   });
 
+  it('hides the pull indicator in the markup itself, before any binding has run', () => {
+    fixture = TestBed.createComponent(HomePage);
+
+    const indicator: HTMLElement = fixture.nativeElement.querySelector(
+      '[data-testid="pull-indicator"]',
+    );
+    expect(indicator.classList).toContain('opacity-0');
+    expect(indicator.classList).toContain('-translate-y-12');
+    expect(indicator.hasAttribute('data-pulling')).toBe(false);
+  });
+
   describe('refreshing', () => {
     /** Lets the clock run on to the next day, as for a page left open overnight. */
     function nextDay(): void {
@@ -436,12 +447,12 @@ describe('HomePage', () => {
       touch(main, 'touchmove', [{ x: 100, y: 300 }]);
       fixture.detectChanges();
       const indicator = fixture.nativeElement.querySelector('[data-testid="pull-indicator"]');
-      expect(indicator.classList).not.toContain('opacity-0');
+      expect(indicator.hasAttribute('data-pulling')).toBe(true);
       touch(main, 'touchend', []);
       fixture.detectChanges();
 
       expect(text('day-count')).toBe('9');
-      expect(indicator.classList).toContain('opacity-0');
+      expect(indicator.hasAttribute('data-pulling')).toBe(false);
     });
 
     it('recounts when the app comes back to the foreground', async () => {
