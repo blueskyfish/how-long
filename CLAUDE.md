@@ -83,6 +83,10 @@ the hash location strategy (`#/admin/3`), so the build can be served from any pa
   hand-edit it. Add primitives with
   `npx ng g @spartan-ng/cli:ui <name> --interactive=false --defaults` (registers the
   `@spartan-ng/helm/<name>` path alias in `tsconfig.json`).
+- Font: Geist (variable, SIL OFL), self-hosted from `@fontsource-variable/geist` through the
+  `@font-face` rules in `src/styles.css` and set as `--font-sans`. Only the Latin subsets are
+  declared, and `ngsw-config.json` prefetches `/media/*.woff2` so the font works offline. Apple's
+  SF Pro is not an option: its license forbids serving it from a web server.
 - Open dialogs with `openDialog()` from `shared/dialog.ts`, which applies viewport-based
   sizing. `w-full` / `max-h-full` on dialog content do not work because the CDK sizes
   overlay panes to their content.
