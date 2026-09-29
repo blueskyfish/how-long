@@ -27,6 +27,7 @@ import {
   DEFAULT_APPOINTMENT_ICON,
   groupOfIcon,
 } from '../../shared/appointment-style';
+import { IsoDateField } from '../../shared/iso-date-field';
 import { IconGroupSelect } from './icon-group-select';
 
 export interface AppointmentDialogContext {
@@ -54,6 +55,7 @@ export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'colo
     HlmInput,
     HlmLabel,
     IconGroupSelect,
+    IsoDateField,
     LocalDatePipe,
     NgIcon,
     FormField,
@@ -81,14 +83,11 @@ export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'colo
 
         <div class="grid gap-2">
           <label hlmLabel for="appointment-date">{{ 'appointmentDialog.date' | translate }}</label>
-          <input
-            hlmInput
-            id="appointment-date"
-            type="date"
-            class="appearance-none"
-            [max]="maxDate"
-            (input)="dateTouched.set(true)"
+          <app-iso-date-field
+            inputId="appointment-date"
+            [latest]="maxDate"
             [formField]="form.date"
+            (edited)="dateTouched.set(true)"
           />
           <p class="text-muted-foreground text-xs">
             {{ 'appointmentDialog.dateHint' | translate: { date: context.targetDate | localDate } }}

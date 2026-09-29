@@ -1,4 +1,4 @@
-export { formatDate } from './format-date';
+export { formatDate, parseLocalDate } from './format-date';
 export { LANGUAGE_STORAGE, LanguageService } from './language.service';
 export { DEFAULT_LANGUAGE, LANGUAGES, isLanguage } from './languages';
 export type { Language } from './languages';

@@ -91,7 +91,10 @@ the hash location strategy (`#/admin/3`), so the build can be served from any pa
   plain spacing. Test without a notch by overriding `--safe-top` etc. on `<html>`.
 - Pickers with a native counterpart go through the CDK's `Platform`: the icon group is a
   native `<select>` only on iOS and Android (`IconGroupSelect`), the Spartan select
-  elsewhere. `Platform` reads the user agent once at start, so switch the emulated device
+  elsewhere; a day is a native `<input type="date">` there and the Spartan date picker
+  elsewhere (`IsoDateField`, a Signal Forms control holding the `yyyy-mm-dd` string, with the
+  calendar's texts from `calendarI18n`). Never write to `BrnCalendarI18nService` in a
+  tracked context: `use()` reads its own signal, so an `effect` calling it loops forever. `Platform` reads the user agent once at start, so switch the emulated device
   and reload. Specs provide `Platform` themselves, since jsdom is neither.
 - Landscape phones use the custom `landscape-phone:` variant. It is bounded by
   `max-height: 30rem`, so tablets and desktops keep the stacked layout.

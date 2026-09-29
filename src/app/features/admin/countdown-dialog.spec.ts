@@ -1,4 +1,5 @@
 import { DIALOG_DATA } from '@angular/cdk/dialog';
+import { Platform } from '@angular/cdk/platform';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BrnDialogRef } from '@spartan-ng/brain/dialog';
 import { describe, expect, it, vi } from 'vitest';
@@ -9,12 +10,26 @@ import { provideTestI18n } from '../../../testing/i18n';
 describe('CountdownDialog', () => {
   const close = vi.fn();
 
-  function render(context: CountdownDialogContext): ComponentFixture<CountdownDialog> {
+  /** What `Platform` reports; jsdom itself is neither iOS nor Android. */
+  const DEVICES = {
+    phone: { IOS: false, ANDROID: true },
+    desktop: { IOS: false, ANDROID: false },
+  };
+
+  /**
+   * Renders the dialog. On a phone the date is the system's own `<input type="date">`,
+   * which most specs below drive; `desktop` gets the Spartan date picker.
+   */
+  function render(
+    context: CountdownDialogContext,
+    device: keyof typeof DEVICES = 'phone',
+  ): ComponentFixture<CountdownDialog> {
     close.mockClear();
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
         ...provideTestI18n(),
+        { provide: Platform, useValue: DEVICES[device] },
         { provide: DIALOG_DATA, useValue: context },
         { provide: BrnDialogRef, useValue: { close } },
       ],
@@ -168,5 +183,76 @@ describe('CountdownDialog', () => {
     expect(
       fixture.nativeElement.querySelector('[data-testid="date-error"]').textContent.trim(),
     ).toBe('Wähle ein gültiges Zieldatum.');
+  });
+
+  describe('on a desktop', () => {
+    const typeDate = (fixture: ComponentFixture<CountdownDialog>, text: string) => {
+      const input = fixture.nativeElement.querySelector('#countdown-date') as HTMLInputElement;
+      input.value = text;
+      // A real input event bubbles; the picker listens for it on its own element.
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      fixture.detectChanges();
+    };
+
+    it('offers the Spartan date picker with a calendar button, not a native date input', () => {
+      const fixture = render({}, 'desktop');
+
+      const input = fixture.nativeElement.querySelector('#countdown-date') as HTMLInputElement;
+      expect(input.type).toBe('text');
+      expect(input.placeholder).toBe('YYYY-MM-DD');
+      expect(fixture.nativeElement.querySelector('[aria-label="Open calendar"]')).not.toBeNull();
+    });
+
+    it('takes a typed day and saves it as ISO', () => {
+      const fixture = render({}, 'desktop');
+
+      typeDate(fixture, '2026-12-24');
+      submit(fixture);
+
+      expect(close).toHaveBeenCalledWith({ date: '2026-12-24', description: undefined });
+    });
+
+    it('takes the day in German notation once the language is German', async () => {
+      const fixture = render({}, 'desktop');
+      await TestBed.inject(LanguageService).use('de');
+      fixture.detectChanges();
+      const input = fixture.nativeElement.querySelector('#countdown-date') as HTMLInputElement;
+      expect(input.placeholder).toBe('TT.MM.JJJJ');
+
+      typeDate(fixture, '24.12.2026');
+      submit(fixture);
+
+      expect(close).toHaveBeenCalledWith({ date: '2026-12-24', description: undefined });
+    });
+
+    it('shows a prefilled day the way the language writes it', async () => {
+      const fixture = render({ countdown: { id: 1, date: '2026-12-24' } }, 'desktop');
+      const input = () =>
+        fixture.nativeElement.querySelector('#countdown-date') as HTMLInputElement;
+      expect(input().value).toBe('2026-12-24');
+
+      await TestBed.inject(LanguageService).use('de');
+      fixture.detectChanges();
+
+      expect(input().value).toBe('24.12.2026');
+    });
+
+    it('explains text that is not a day while it is typed', () => {
+      const fixture = render({}, 'desktop');
+
+      typeDate(fixture, '2026-02-30');
+
+      expect(fixture.nativeElement.querySelector('[data-testid="date-error"]')).not.toBeNull();
+      submit(fixture);
+      expect(close).not.toHaveBeenCalled();
+    });
+
+    it('offers the calendar in German', async () => {
+      const fixture = render({}, 'desktop');
+      await TestBed.inject(LanguageService).use('de');
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('[aria-label="Kalender öffnen"]')).not.toBeNull();
+    });
   });
 });

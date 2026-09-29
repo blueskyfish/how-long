@@ -10,6 +10,13 @@
     "save": "Speichern",
     "delete": "Löschen"
   },
+  "dateField": {
+    "placeholder": "TT.MM.JJJJ",
+    "openCalendar": "Kalender öffnen",
+    "clear": "Datum löschen",
+    "previousMonth": "Zum vorigen Monat",
+    "nextMonth": "Zum nächsten Monat"
+  },
   "counter": {
     "today": "heute",
     "dayAgo": "Tag her",

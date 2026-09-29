@@ -324,6 +324,54 @@ describe('AppointmentDialog', () => {
   });
 
   describe('on a desktop', () => {
+    const typeDate = (fixture: ComponentFixture<AppointmentDialog>, text: string) => {
+      const input = fixture.nativeElement.querySelector('#appointment-date') as HTMLInputElement;
+      input.value = text;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      fixture.detectChanges();
+    };
+
+    it('offers the date in the Spartan date picker, not a native date input', () => {
+      const fixture = render({ targetDate: '2026-12-24' }, 'desktop');
+
+      const input = fixture.nativeElement.querySelector('#appointment-date') as HTMLInputElement;
+      expect(input.type).toBe('text');
+      expect(fixture.nativeElement.querySelector('[aria-label="Open calendar"]')).not.toBeNull();
+    });
+
+    it('takes a typed day up to the target date', () => {
+      const fixture = render({ targetDate: '2026-12-24' }, 'desktop');
+      fill(fixture, { title: 'The day' });
+
+      typeDate(fixture, '2026-12-24');
+      submit(fixture);
+
+      expect(close).toHaveBeenCalledWith(expect.objectContaining({ date: '2026-12-24' }));
+    });
+
+    it('refuses a typed day after the target date and says why', () => {
+      const fixture = render({ targetDate: '2026-12-24' }, 'desktop');
+      fill(fixture, { title: 'Too late' });
+
+      typeDate(fixture, '2026-12-25');
+      submit(fixture);
+
+      expect(close).not.toHaveBeenCalled();
+      expect(fixture.nativeElement.querySelector('[data-testid="date-error"]')).not.toBeNull();
+    });
+
+    it('takes the German notation once the language is German', async () => {
+      const fixture = render({ targetDate: '2026-12-24' }, 'desktop');
+      await TestBed.inject(LanguageService).use('de');
+      fixture.detectChanges();
+      fill(fixture, { title: 'Advent' });
+
+      typeDate(fixture, '01.12.2026');
+      submit(fixture);
+
+      expect(close).toHaveBeenCalledWith(expect.objectContaining({ date: '2026-12-01' }));
+    });
+
     it('offers the icon groups in the app’s own dropdown, not a native select', () => {
       const fixture = render({ targetDate: '2026-12-24' }, 'desktop');
 
