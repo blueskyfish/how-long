@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormField, FormRoot, form, maxLength, required, validate } from '@angular/forms/signals';
 import { BrnDialogRef, injectBrnDialogContext } from '@spartan-ng/brain/dialog';
 import { HlmButton } from '@spartan-ng/helm/button';
@@ -42,9 +42,10 @@ export type CountdownDialogResult = Pick<Countdown, 'date' | 'description'>;
             id="countdown-date"
             type="date"
             class="appearance-none"
+            (input)="dateTouched.set(true)"
             [formField]="form.date"
           />
-          @if (showDateError()) {
+          @if (dateTouched() && form.date().invalid()) {
             <p class="text-destructive text-sm" data-testid="date-error">
               Pick a valid target date.
             </p>
@@ -90,17 +91,16 @@ export class CountdownDialog {
   });
 
   /**
-   * A rejected date is explained as soon as the user types into the field, or
-   * tries to save. Without it the problem would show up only as a disabled Save
-   * button with no explanation, since `touched` alone waits for the field to
-   * lose focus.
+   * Set as soon as the user types into the date field, or tries to save. Without
+   * it a rejected date would show up only as a disabled Save button with no
+   * explanation. Neither `touched` (fires when the field merely loses focus) nor
+   * `dirty` (a native date input can set it by itself while it tracks its
+   * validity) tells a real edit apart.
    */
-  protected readonly showDateError = computed(
-    () => (this.form.date().dirty() || this.form.date().touched()) && this.form.date().invalid(),
-  );
+  protected readonly dateTouched = signal(false);
 
   protected save(): void {
-    this.form().markAsTouched();
+    this.dateTouched.set(true);
     if (this.form().invalid()) {
       return;
     }

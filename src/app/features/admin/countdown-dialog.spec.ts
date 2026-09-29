@@ -122,6 +122,17 @@ describe('CountdownDialog', () => {
     expect(close).not.toHaveBeenCalled();
   });
 
+  it('keeps the date error hidden when the field is merely focused and left', () => {
+    const fixture = render({});
+    const input = fixture.nativeElement.querySelector('#countdown-date');
+
+    input.dispatchEvent(new Event('focus'));
+    input.dispatchEvent(new Event('blur'));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="date-error"]')).toBeNull();
+  });
+
   it('closes with undefined when cancelled', () => {
     const fixture = render({});
 
