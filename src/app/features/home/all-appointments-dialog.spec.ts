@@ -66,6 +66,32 @@ describe('AllAppointmentsDialog', () => {
     expect(fixture.nativeElement.textContent).toContain('No appointments yet.');
   });
 
+  it('keeps header, list and button apart like the other dialogs', () => {
+    const fixture = render({ targetDate: '2026-12-24', appointments });
+    const host: HTMLElement = fixture.nativeElement;
+
+    expect(host.classList).toContain('grid');
+    expect(host.classList).toContain('gap-6');
+  });
+
+  it('caps the list at ten rows and scrolls the rest', () => {
+    const many = Array.from({ length: 15 }, (_, i) => ({
+      ...appointments[0],
+      id: i + 1,
+      title: `Appointment ${i + 1}`,
+    }));
+    const fixture = render({ targetDate: '2026-12-24', appointments: many });
+
+    const scroller: HTMLElement = fixture.nativeElement.querySelector(
+      '[data-testid="appointment-scroller"]',
+    );
+
+    // Every row is still in the list; only the box is limited, to 10 × 2.25rem + 9 × 0.25rem.
+    expect(scroller.querySelectorAll('li')).toHaveLength(15);
+    expect(scroller.className).toContain('max-h-[min(24.75rem,60dvh)]');
+    expect(scroller.className).toContain('overflow-y-auto');
+  });
+
   it('closes when dismissed', () => {
     const fixture = render({ targetDate: '2026-12-24', appointments });
 
