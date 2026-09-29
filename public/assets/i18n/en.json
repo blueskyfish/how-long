@@ -74,8 +74,8 @@
     "titleEdit": "Edit appointment",
     "title": "Title",
     "date": "Date",
-    "dateHint": "Must be before {{date}}.",
-    "dateError": "The date must be before {{date}}.",
+    "dateHint": "Must be on or before {{date}}.",
+    "dateError": "The date must be on or before {{date}}.",
     "colour": "Colour",
     "icon": "Icon",
     "iconGroup": "Icon group"
@@ -102,8 +102,8 @@
     "unknownAppointment": "Unknown appointment {{id}}",
     "invalidDate": "\"{{date}}\" is not a valid yyyy-mm-dd date",
     "unknownCountdown": "Unknown countdown {{id}}",
-    "appointmentAfterTarget": "Appointment date {{date}} must be before the target date {{target}}",
-    "countdownBeforeAppointment": "Appointment \"{{title}}\" on {{date}} must be before the target date {{target}}",
+    "appointmentAfterTarget": "Appointment date {{date}} must not be after the target date {{target}}",
+    "countdownBeforeAppointment": "Appointment \"{{title}}\" on {{date}} must not be after the target date {{target}}",
     "backup": {
       "notJson": "The file is not valid JSON.",
       "notObject": "The backup must be a JSON object.",
@@ -114,7 +114,7 @@
       "countdownDescription": "{{where}}.description must be a string.",
       "appointmentsArray": "{{where}}.appointments must be an array.",
       "appointmentDate": "{{where}}.date must be a yyyy-mm-dd date.",
-      "appointmentAfterTarget": "{{where}}.date ({{date}}) must be before the target date {{target}}.",
+      "appointmentAfterTarget": "{{where}}.date ({{date}}) must not be after the target date {{target}}.",
       "appointmentTitle": "{{where}}.title must be a non-empty string."
     }
   },

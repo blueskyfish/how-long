@@ -97,9 +97,9 @@ Two rules hold everywhere, enforced centrally in
 
 1. Dates are `yyyy-mm-dd` strings that name a real calendar day. Storing them as strings
    makes them sortable and comparable directly, and keeps them free of time zones.
-2. An appointment's date is strictly **before** the target date of its countdown. This is
-   re-checked when an appointment moves _and_ when a countdown's target date moves, so the
-   invariant cannot be broken from either side.
+2. An appointment's date is never **after** the target date of its countdown; the target day
+   itself is allowed. This is re-checked when an appointment moves _and_ when a countdown's
+   target date moves, so the invariant cannot be broken from either side.
 
 Deleting a countdown deletes its appointments in the same transaction.
 

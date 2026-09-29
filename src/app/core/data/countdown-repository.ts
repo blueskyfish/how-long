@@ -10,7 +10,7 @@ import { HOW_LONG_DB } from './db';
 /**
  * Single access point to the IndexedDB stores. Enforces the two domain rules that
  * the schema itself cannot express: dates are `yyyy-mm-dd`, and an appointment
- * always falls strictly before the target date of its countdown.
+ * never falls after the target date of its countdown; the target day itself is allowed.
  */
 @Injectable({ providedIn: 'root' })
 export class CountdownRepository {
@@ -43,7 +43,7 @@ export class CountdownRepository {
   async updateCountdown(id: number, changes: Partial<Omit<Countdown, 'id'>>): Promise<void> {
     if (changes.date !== undefined) {
       this.assertIsoDate(changes.date);
-      await this.assertAppointmentsFitBefore(id, changes.date);
+      await this.assertAppointmentsFitUpTo(id, changes.date);
     }
     await this.db.countdowns.update(id, changes);
   }
@@ -115,22 +115,22 @@ export class CountdownRepository {
         id: countdownId,
       });
     }
-    if (date >= countdown.date) {
+    if (date > countdown.date) {
       throw new LocalizedError(
         'errors.appointmentAfterTarget',
-        `Appointment date ${date} must be before the target date ${countdown.date}`,
+        `Appointment date ${date} must not be after the target date ${countdown.date}`,
         { date, target: countdown.date },
       );
     }
   }
 
-  private async assertAppointmentsFitBefore(countdownId: number, date: string): Promise<void> {
+  private async assertAppointmentsFitUpTo(countdownId: number, date: string): Promise<void> {
     const appointments = await this.listAppointments(countdownId);
-    const conflict = appointments.find((appointment) => appointment.date >= date);
+    const conflict = appointments.find((appointment) => appointment.date > date);
     if (conflict) {
       throw new LocalizedError(
         'errors.countdownBeforeAppointment',
-        `Appointment "${conflict.title}" on ${conflict.date} must be before the target date ${date}`,
+        `Appointment "${conflict.title}" on ${conflict.date} must not be after the target date ${date}`,
         { title: conflict.title, date: conflict.date, target: date },
       );
     }

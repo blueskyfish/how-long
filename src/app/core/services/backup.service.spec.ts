@@ -93,8 +93,23 @@ describe('BackupService', () => {
       expect(() => service.parse(JSON.stringify(broken))).toThrow(/yyyy-mm-dd/i);
     });
 
-    it('rejects an appointment that is not before its target date', () => {
+    it('rejects an appointment after its target date', () => {
       const broken = {
+        ...sample,
+        countdowns: [
+          {
+            date: '2026-12-24',
+            appointments: [{ date: '2026-12-25', title: 'x', color: '#000000', icon: 'flag' }],
+          },
+        ],
+      };
+      expect(() => service.parse(JSON.stringify(broken))).toThrow(
+        /must not be after the target date/i,
+      );
+    });
+
+    it('accepts an appointment on its target date', () => {
+      const onTheDay = {
         ...sample,
         countdowns: [
           {
@@ -103,7 +118,8 @@ describe('BackupService', () => {
           },
         ],
       };
-      expect(() => service.parse(JSON.stringify(broken))).toThrow(/before the target date/i);
+
+      expect(service.parse(JSON.stringify(onTheDay)).countdowns[0].appointments).toHaveLength(1);
     });
 
     it('rejects an appointment without a title', () => {

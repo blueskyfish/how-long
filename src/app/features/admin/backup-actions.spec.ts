@@ -110,7 +110,7 @@ describe('BackupActions', () => {
       expect(await repository.listCountdowns()).toEqual([]);
     });
 
-    it('rejects a backup whose appointment is not before the target date', async () => {
+    it('rejects a backup whose appointment is after the target date', async () => {
       const broken = JSON.stringify({
         version: BACKUP_VERSION,
         countdowns: [
@@ -126,7 +126,7 @@ describe('BackupActions', () => {
       await actions.importFile(jsonFile(broken));
 
       expect(notifications.error).toHaveBeenCalledWith(
-        expect.stringContaining('must be before the target date'),
+        expect.stringContaining('must not be after the target date'),
       );
       expect(await repository.listCountdowns()).toEqual([]);
     });
@@ -188,7 +188,7 @@ describe('BackupActions', () => {
       await actions.importFile(jsonFile(broken));
 
       expect(notifications.error).toHaveBeenCalledWith(
-        'Import fehlgeschlagen: countdowns[0].appointments[0].date (25.12.2026) muss vor dem Zieldatum 24.12.2026 liegen.',
+        'Import fehlgeschlagen: countdowns[0].appointments[0].date (25.12.2026) darf nicht nach dem Zieldatum 24.12.2026 liegen.',
       );
     });
   });

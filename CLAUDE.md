@@ -42,8 +42,8 @@ the hash location strategy (`#/admin/3`), so the build can be served from any pa
   `HOW_LONG_DB` injection token. All reads and writes go through `CountdownRepository`;
   components consume its `watch*()` methods (Dexie `liveQuery`, converted with `toSignal`).
 - **Domain invariants live in the repository, not in forms:** dates are `yyyy-mm-dd`
-  strings of a real calendar day, and an appointment's date is strictly before its
-  countdown's target date. Both are checked when an appointment moves _and_ when a
+  strings of a real calendar day, and an appointment's date is not after its
+  countdown's target date (the target day itself is allowed). Both are checked when an appointment moves _and_ when a
   countdown's date moves. Deleting a countdown deletes its appointments in one transaction.
 - **Dates** — day arithmetic goes through `core/services/date-utils.ts` (UTC midnights, so
   DST cannot cause off-by-one). Which countdown the start page shows is decided by

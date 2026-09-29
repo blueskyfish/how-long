@@ -171,16 +171,29 @@ describe('AdminDetailPage', () => {
     });
   });
 
-  it('reports the invariant violation when the dialog returns a date on the target day', async () => {
+  it('creates an appointment the dialog returns for the target day', async () => {
     await render();
-    stubDialog({ date: '2026-12-24', title: 'Too late', color: '#e53935', icon: 'lucideStar' });
+    stubDialog({ date: '2026-12-24', title: 'The day', color: '#e53935', icon: 'lucideStar' });
+
+    fixture.nativeElement.querySelector('[data-testid="add-appointment"]').click();
+    await settle(fixture);
+
+    expect(await repository.listAppointments(countdownId)).toMatchObject([
+      { date: '2026-12-24', title: 'The day' },
+    ]);
+    expect(notifications.error).not.toHaveBeenCalled();
+  });
+
+  it('reports the invariant violation when the dialog returns a date after the target day', async () => {
+    await render();
+    stubDialog({ date: '2026-12-25', title: 'Too late', color: '#e53935', icon: 'lucideStar' });
 
     fixture.nativeElement.querySelector('[data-testid="add-appointment"]').click();
     await settle(fixture);
 
     expect(await repository.listAppointments(countdownId)).toEqual([]);
     expect(notifications.error).toHaveBeenCalledWith(
-      expect.stringContaining('must be before the target date'),
+      expect.stringContaining('must not be after the target date'),
     );
   });
 
@@ -242,7 +255,7 @@ describe('AdminDetailPage', () => {
 
     expect((await repository.getCountdown(countdownId))?.date).toBe('2026-12-24');
     expect(notifications.error).toHaveBeenCalledWith(
-      expect.stringContaining('must be before the target date'),
+      expect.stringContaining('must not be after the target date'),
     );
   });
 
@@ -276,13 +289,13 @@ describe('AdminDetailPage', () => {
 
     it('reports a violated invariant in German, with the days written the German way', async () => {
       await render();
-      stubDialog({ date: '2026-12-24', title: 'Too late', color: '#e53935', icon: 'lucideStar' });
+      stubDialog({ date: '2026-12-25', title: 'Too late', color: '#e53935', icon: 'lucideStar' });
 
       fixture.nativeElement.querySelector('[data-testid="add-appointment"]').click();
       await settle(fixture);
 
       expect(notifications.error).toHaveBeenCalledWith(
-        'Der Termin am 24.12.2026 muss vor dem Zieldatum 24.12.2026 liegen',
+        'Der Termin am 25.12.2026 darf nicht nach dem Zieldatum 24.12.2026 liegen',
       );
     });
   });

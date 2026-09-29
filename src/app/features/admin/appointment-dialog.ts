@@ -18,7 +18,7 @@ import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
 import { LocalDatePipe } from '../../core/i18n/local-date.pipe';
 import { Appointment } from '../../core/models';
-import { isValidIsoDate, parseIsoDate, toIsoDate } from '../../core/services/date-utils';
+import { isValidIsoDate } from '../../core/services/date-utils';
 import {
   APPOINTMENT_COLORS,
   APPOINTMENT_ICONS,
@@ -30,7 +30,7 @@ import {
 import { IconGroupSelect } from './icon-group-select';
 
 export interface AppointmentDialogContext {
-  /** The countdown's target date; appointments must fall strictly before it. */
+  /** The countdown's target date; appointments must not fall after it. */
   targetDate: string;
   appointment?: Appointment;
   /** Group a new appointment opens the icon picker on; editing uses the icon's own group. */
@@ -193,10 +193,10 @@ export class AppointmentDialog {
 
   private readonly iconGrid = viewChild.required<ElementRef<HTMLElement>>('iconGrid');
 
-  /** The day before the target date — also fed to the input's `max` attribute. */
   protected readonly isAfterTarget = ({ kind }: { kind: string }) => kind === 'afterTarget';
 
-  protected readonly maxDate = this.dayBeforeTarget();
+  /** The latest day an appointment may fall on — fed to the input's `max` attribute. */
+  protected readonly maxDate = this.context.targetDate;
 
   private readonly model = signal({
     title: this.context.appointment?.title ?? '',
@@ -217,7 +217,7 @@ export class AppointmentDialog {
       if (!isValidIsoDate(value())) {
         return { kind: 'isoDate' };
       }
-      return value() < this.context.targetDate ? null : { kind: 'afterTarget' };
+      return value() <= this.context.targetDate ? null : { kind: 'afterTarget' };
     });
   });
 
@@ -257,13 +257,5 @@ export class AppointmentDialog {
 
   protected cancel(): void {
     this.dialogRef.close(undefined);
-  }
-
-  private dayBeforeTarget(): string {
-    const target = parseIsoDate(this.context.targetDate);
-    if (!target) {
-      return '';
-    }
-    return toIsoDate(new Date(target.getFullYear(), target.getMonth(), target.getDate() - 1));
   }
 }
