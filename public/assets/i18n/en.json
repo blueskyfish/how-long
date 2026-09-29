@@ -10,6 +10,13 @@
     "save": "Save",
     "delete": "Delete"
   },
+  "dateField": {
+    "placeholder": "YYYY-MM-DD",
+    "openCalendar": "Open calendar",
+    "clear": "Clear date",
+    "previousMonth": "Go to the previous month",
+    "nextMonth": "Go to the next month"
+  },
   "counter": {
     "today": "today",
     "dayAgo": "day ago",

@@ -203,7 +203,9 @@ it before the first render, saves the choice in `localStorage` and sets `<html l
 
 A spec fails when the two files differ in keys or placeholders, or when a colour, icon group or
 icon has no name in both. The manifest and the `<title>` stay English: they are read before the
-app runs. The native date field follows the browser's own locale, not the app's language.
+app runs. The date field is the system's own picker on iOS and Android, which follows the device's
+locale; elsewhere it is the Spartan date picker, which follows the app's language: typed
+or picked, shown as `DD.MM.YYYY` or `YYYY-MM-DD`, with a Monday-first calendar.
 
 To add a language, add it to `LANGUAGES` in
 [`languages.ts`](src/app/core/i18n/languages.ts), give `formatDate` its date order, copy

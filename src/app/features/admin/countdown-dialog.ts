@@ -8,6 +8,7 @@ import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmLabel } from '@spartan-ng/helm/label';
 import { Countdown } from '../../core/models';
 import { isValidIsoDate } from '../../core/services/date-utils';
+import { IsoDateField } from '../../shared/iso-date-field';
 
 export interface CountdownDialogContext {
   countdown?: Countdown;
@@ -26,6 +27,7 @@ export type CountdownDialogResult = Pick<Countdown, 'date' | 'description'>;
     HlmDialogTitle,
     HlmInput,
     HlmLabel,
+    IsoDateField,
     FormField,
     FormRoot,
     TranslatePipe,
@@ -44,13 +46,10 @@ export type CountdownDialogResult = Pick<Countdown, 'date' | 'description'>;
       <div class="grid gap-4">
         <div class="grid gap-2">
           <label hlmLabel for="countdown-date">{{ 'countdownDialog.date' | translate }}</label>
-          <input
-            hlmInput
-            id="countdown-date"
-            type="date"
-            class="appearance-none"
-            (input)="dateTouched.set(true)"
+          <app-iso-date-field
+            inputId="countdown-date"
             [formField]="form.date"
+            (edited)="dateTouched.set(true)"
           />
           @if (dateTouched() && form.date().invalid()) {
             <p class="text-destructive text-sm" data-testid="date-error">
