@@ -15,12 +15,23 @@ export interface AllAppointmentsDialogContext {
   selector: 'app-all-appointments-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [AppointmentList, HlmButton, HlmDialogFooter, HlmDialogHeader, HlmDialogTitle],
+  // The dialog host is not a grid on its own, so without this header, list and
+  // footer would touch; `gap-6` matches the form dialogs.
+  host: { class: 'grid gap-6' },
   template: `
     <div hlmDialogHeader>
       <h2 hlmDialogTitle>All appointments</h2>
       <p class="text-muted-foreground text-sm">Leading up to {{ context.targetDate }}</p>
     </div>
-    <div class="max-h-[60dvh] overflow-y-auto">
+    <!--
+      Ten rows, then a scrollbar: a row is 2.25rem high with a 0.25rem gap
+      (10 × 2.25 + 9 × 0.25 = 24.75rem). On a phone in landscape the viewport
+      is the tighter limit.
+    -->
+    <div
+      class="max-h-[min(24.75rem,60dvh)] overflow-y-auto [scrollbar-gutter:stable]"
+      data-testid="appointment-scroller"
+    >
       <app-appointment-list [appointments]="context.appointments" />
     </div>
     <div hlmDialogFooter>
