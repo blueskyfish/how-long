@@ -12,6 +12,7 @@ import { CountdownPicker } from './countdown-picker';
 import { HomePage } from './home-page';
 import { COUNTDOWN_STORAGE } from './remembered-countdown';
 import { provideTestIcons } from '../../../testing/icons';
+import { touch } from '../../../testing/touch';
 
 describe('HomePage', () => {
   let db: HowLongDatabase;
@@ -385,6 +386,86 @@ describe('HomePage', () => {
       expect(fixture.nativeElement.querySelector('[data-testid="target-date"]').tagName).toBe(
         'BUTTON',
       );
+    });
+  });
+
+  describe('refreshing', () => {
+    /** Lets the clock run on to the next day, as for a page left open overnight. */
+    function nextDay(): void {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 9));
+    }
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    const dispatchOn = (selector: string, type: string) =>
+      fixture.nativeElement
+        .querySelector(selector)
+        .dispatchEvent(new Event(type, { bubbles: true }));
+
+    it('keeps the day count while the page stays open', async () => {
+      await repository.createCountdown({ date: inDays(10) });
+      await render();
+
+      nextDay();
+      fixture.detectChanges();
+
+      expect(text('day-count')).toBe('10');
+    });
+
+    it('recounts when the day count is double-clicked', async () => {
+      await repository.createCountdown({ date: inDays(10) });
+      await render();
+      nextDay();
+
+      dispatchOn('app-day-counter', 'dblclick');
+      fixture.detectChanges();
+
+      expect(text('day-count')).toBe('9');
+    });
+
+    it('recounts when the page is pulled down', async () => {
+      await repository.createCountdown({ date: inDays(10) });
+      await render();
+      nextDay();
+
+      const main = fixture.nativeElement.querySelector('main');
+      touch(main, 'touchstart', [{ x: 100, y: 100 }]);
+      touch(main, 'touchmove', [{ x: 100, y: 300 }]);
+      fixture.detectChanges();
+      const indicator = fixture.nativeElement.querySelector('[data-testid="pull-indicator"]');
+      expect(indicator.classList).not.toContain('opacity-0');
+      touch(main, 'touchend', []);
+      fixture.detectChanges();
+
+      expect(text('day-count')).toBe('9');
+      expect(indicator.classList).toContain('opacity-0');
+    });
+
+    it('recounts when the app comes back to the foreground', async () => {
+      await repository.createCountdown({ date: inDays(10) });
+      await render();
+      nextDay();
+
+      document.dispatchEvent(new Event('visibilitychange'));
+      fixture.detectChanges();
+
+      expect(text('day-count')).toBe('9');
+    });
+
+    it('moves on to the next countdown once a refresh finds the shown one passed', async () => {
+      await repository.createCountdown({ date: inDays(0), description: 'Today' });
+      await repository.createCountdown({ date: inDays(10), description: 'Later' });
+      await render();
+      expect(text('description')).toBe('Today');
+      nextDay();
+
+      dispatchOn('app-day-counter', 'dblclick');
+      fixture.detectChanges();
+
+      expect(text('description')).toBe('Later');
     });
   });
 });

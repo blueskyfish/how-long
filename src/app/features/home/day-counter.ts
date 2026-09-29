@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  computed,
+  input,
+  viewChild,
+} from '@angular/core';
 
 /**
  * The headline of the start page: the remaining day count inside a circle.
@@ -11,7 +18,8 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
-      class="border-primary/20 bg-card @container data-urgent:border-destructive/40 data-urgent:shadow-[0_0_2.5rem_0.5rem_color-mix(in_oklch,var(--destructive)_35%,transparent)] mx-auto flex aspect-square w-full max-w-[min(17rem,45dvh)] flex-col items-center justify-center rounded-[50%] border-4 transition-[border-color,box-shadow] duration-700"
+      #circle
+      class="border-primary/20 bg-card @container data-urgent:border-destructive/40 data-urgent:shadow-[0_0_2.5rem_0.5rem_color-mix(in_oklch,var(--destructive)_35%,transparent)] mx-auto flex aspect-square w-full max-w-[min(17rem,45dvh)] flex-col items-center justify-center rounded-[50%] border-4 select-none transition-[border-color,box-shadow] duration-700"
       [attr.data-urgent]="urgent() ? '' : null"
       data-testid="day-circle"
     >
@@ -35,6 +43,24 @@ export class DayCounter {
 
   /** The target date is close: the rim turns red and the circle glows. */
   readonly urgent = input(false);
+
+  private readonly circle = viewChild.required<ElementRef<HTMLElement>>('circle');
+
+  /**
+   * A short squeeze of the circle, to acknowledge a refresh the user asked for.
+   * Skipped for reduced motion and where the Web Animations API is missing.
+   */
+  pulse(): void {
+    const element = this.circle().nativeElement;
+    const view = element.ownerDocument.defaultView;
+    if (!element.animate || view?.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+    element.animate(
+      [{ transform: 'scale(1)' }, { transform: 'scale(0.94)' }, { transform: 'scale(1)' }],
+      { duration: 350, easing: 'ease-out' },
+    );
+  }
 
   protected readonly count = computed(() => Math.abs(this.days()));
 
