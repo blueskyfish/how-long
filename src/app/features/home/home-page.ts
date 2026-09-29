@@ -108,7 +108,7 @@ const URGENT_WITHIN_DAYS = 3;
             />
           </div>
           @if (countdown.description) {
-            <p class="text-muted-foreground mt-1 text-sm wrap-anywhere" data-testid="description">
+            <p class="text-muted-foreground mt-1 text-base wrap-anywhere" data-testid="description">
               {{ countdown.description }}
             </p>
           }

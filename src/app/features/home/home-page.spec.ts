@@ -67,6 +67,18 @@ describe('HomePage', () => {
       icon: 'lucideFlag',
     });
 
+  it('sets the description in the larger text size', async () => {
+    await repository.createCountdown({ date: inDays(42), description: 'Project launch' });
+
+    await render();
+
+    const description: HTMLElement = fixture.nativeElement.querySelector(
+      '[data-testid="description"]',
+    );
+    expect(description.classList).toContain('text-base');
+    expect(description.classList).not.toContain('text-sm');
+  });
+
   it('shows the day count, target date and description', async () => {
     await repository.createCountdown({ date: inDays(42), description: 'Project launch' });
 

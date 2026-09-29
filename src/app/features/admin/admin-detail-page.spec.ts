@@ -259,6 +259,17 @@ describe('AdminDetailPage', () => {
     );
   });
 
+  it('sets the description in the same text size as the start page', async () => {
+    await render();
+
+    const description: HTMLElement = fixture.nativeElement.querySelector(
+      '[data-testid="description"]',
+    );
+    expect(description.textContent).toContain('Christmas');
+    expect(description.classList).toContain('text-base');
+    expect(description.classList).not.toContain('text-sm');
+  });
+
   describe('in German', () => {
     beforeEach(async () => {
       await TestBed.inject(LanguageService).use('de');
