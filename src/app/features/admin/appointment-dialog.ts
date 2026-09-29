@@ -21,13 +21,13 @@ import { Appointment } from '../../core/models';
 import { isValidIsoDate, parseIsoDate, toIsoDate } from '../../core/services/date-utils';
 import {
   APPOINTMENT_COLORS,
-  APPOINTMENT_ICON_GROUPS,
   APPOINTMENT_ICONS,
   AppointmentIconGroup,
   DEFAULT_APPOINTMENT_COLOR,
   DEFAULT_APPOINTMENT_ICON,
   groupOfIcon,
 } from '../../shared/appointment-style';
+import { IconGroupSelect } from './icon-group-select';
 
 export interface AppointmentDialogContext {
   /** The countdown's target date; appointments must fall strictly before it. */
@@ -53,6 +53,7 @@ export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'colo
     HlmDialogTitle,
     HlmInput,
     HlmLabel,
+    IconGroupSelect,
     LocalDatePipe,
     NgIcon,
     FormField,
@@ -128,18 +129,7 @@ export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'colo
             <span hlmLabel id="appointment-icon-label">{{
               'appointmentDialog.icon' | translate
             }}</span>
-            <select
-              class="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-8 rounded-md border bg-transparent px-2 text-sm outline-none focus-visible:ring-3"
-              [attr.aria-label]="'appointmentDialog.iconGroup' | translate"
-              data-testid="icon-group"
-              (change)="selectGroup($any($event.target).value)"
-            >
-              @for (group of iconGroups; track group) {
-                <option [value]="group" [selected]="group === iconGroup()">
-                  {{ 'appointment.groups.' + group | translate }}
-                </option>
-              }
-            </select>
+            <app-icon-group-select [value]="iconGroup()" (valueChange)="selectGroup($event)" />
           </div>
           <!--
             Four rows of size-8 buttons with gap-1, plus p-0.5 so the selected
@@ -186,7 +176,6 @@ export class AppointmentDialog {
   private readonly dialogRef = inject<BrnDialogRef<AppointmentDialogResult>>(BrnDialogRef);
 
   protected readonly colors = APPOINTMENT_COLORS;
-  protected readonly iconGroups = APPOINTMENT_ICON_GROUPS;
 
   /**
    * Editing opens on the group of the current icon, so it starts where it left
