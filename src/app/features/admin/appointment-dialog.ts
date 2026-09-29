@@ -77,10 +77,11 @@ export type AppointmentDialogResult = Pick<Appointment, 'date' | 'title' | 'colo
             type="date"
             class="appearance-none"
             [max]="maxDate"
+            (input)="dateTouched.set(true)"
             [formField]="form.date"
           />
           <p class="text-muted-foreground text-xs">Must be before {{ context.targetDate }}.</p>
-          @if (showDateError()) {
+          @if (dateTouched() && form.date().errors().some(isAfterTarget)) {
             <p class="text-destructive text-sm" data-testid="date-error">
               The date must be before {{ context.targetDate }}.
             </p>
@@ -181,6 +182,8 @@ export class AppointmentDialog {
   private readonly iconGrid = viewChild.required<ElementRef<HTMLElement>>('iconGrid');
 
   /** The day before the target date — also fed to the input's `max` attribute. */
+  protected readonly isAfterTarget = ({ kind }: { kind: string }) => kind === 'afterTarget';
+
   protected readonly maxDate = this.dayBeforeTarget();
 
   private readonly model = signal({
@@ -207,17 +210,13 @@ export class AppointmentDialog {
   });
 
   /**
-   * A rejected date is explained as soon as the user types into the field, or
-   * tries to save. Without it the problem would show up only as a disabled Save
-   * button with no explanation, since `touched` alone waits for the field to
-   * lose focus.
+   * Set as soon as the user types into the date field, or tries to save. Without
+   * it a rejected date would show up only as a disabled Save button with no
+   * explanation. Neither `touched` (fires when the field merely loses focus) nor
+   * `dirty` (a native date input can set it by itself while it tracks its
+   * validity) tells a real edit apart.
    */
-  protected readonly showDateError = computed(() => {
-    const date = this.form.date();
-    return (
-      (date.dirty() || date.touched()) && date.errors().some(({ kind }) => kind === 'afterTarget')
-    );
-  });
+  protected readonly dateTouched = signal(false);
 
   constructor() {
     // When editing, the current icon may sit below the rows that are visible.
@@ -236,7 +235,7 @@ export class AppointmentDialog {
   }
 
   protected save(): void {
-    this.form().markAsTouched();
+    this.dateTouched.set(true);
     if (this.form().invalid()) {
       return;
     }

@@ -56,7 +56,9 @@ the hash location strategy (`#/admin/3`), so the build can be served from any pa
   values in a `signal` model and wraps it in `form(model, schema)`; rules (`required`,
   `maxLength`, `validate`) live in the schema, bound to inputs with `[formField]` and to the
   `<form>` with `[formRoot]`. Attributes such as `maxlength` come from the rules, not the
-  template. Specs set values through `form.<field>().value.set(...)`.
+  template. Specs set values through `form.<field>().value.set(...)`. A date field's error
+  follows the DOM `input` event (`dateTouched`), not `touched` or `dirty`: the first fires on
+  merely leaving the field, and a native date input can set the second by itself.
 - **Backup** — `core/services/backup.service.ts` validates a whole file before writing and
   restores in a single transaction; database ids are not exported.
 - **Router features** are exported as `routerFeatures` from `app.config.ts` and reused by the
