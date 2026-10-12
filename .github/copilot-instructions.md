@@ -13,6 +13,9 @@ Node 24 and npm 12 are pinned in `mise.toml`.
 npm start
 npm test -- --watch=false
 npm test -- --watch=false --include src/app/features/home/home-page.spec.ts
+npm run test:e2e
+npx playwright test e2e/countdown.spec.ts
+npx playwright install chrome ffmpeg
 npm run build
 npx prettier --check .
 npm audit --audit-level=high
@@ -20,7 +23,8 @@ npm audit --audit-level=high
 
 The test `--include` value can be a spec path or the corresponding source file path. There is
 no ESLint script. CI runs the formatting check, audit, tests, and build for pull requests to
-`main`.
+`main`; it also runs Playwright browser tests in Chrome and uploads recordings and traces if
+they fail.
 
 ## Architecture
 
