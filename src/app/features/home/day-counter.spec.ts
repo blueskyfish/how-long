@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { LanguageService } from '../../core/i18n/language.service';
 import { provideTestI18n } from '../../../testing/i18n';
 import { DayCounter } from './day-counter';
 
@@ -8,9 +9,10 @@ describe('DayCounter', () => {
 
   beforeEach(() => TestBed.configureTestingModule({ providers: [...provideTestI18n()] }));
 
-  function render(days: number) {
+  function render(days: number, date = '2026-10-12') {
     fixture = TestBed.createComponent(DayCounter);
     fixture.componentRef.setInput('days', days);
+    fixture.componentRef.setInput('date', date);
     fixture.detectChanges();
     return fixture;
   }
@@ -37,6 +39,20 @@ describe('DayCounter', () => {
     render(-250);
 
     expect(text('day-count')).toBe('250');
+  });
+
+  it('shows the current date in the current language', async () => {
+    render(42);
+
+    expect(text('current-date')).toBe('2026-10-12');
+    expect(fixture.nativeElement.querySelector('[data-testid="current-date"]').dateTime).toBe(
+      '2026-10-12',
+    );
+
+    await TestBed.inject(LanguageService).use('de');
+    fixture.detectChanges();
+
+    expect(text('current-date')).toBe('12.10.2026');
   });
 
   it('is a circle', () => {
@@ -87,6 +103,7 @@ describe('DayCounter', () => {
   it('turns the rim red and glows when urgent', () => {
     fixture = TestBed.createComponent(DayCounter);
     fixture.componentRef.setInput('days', 2);
+    fixture.componentRef.setInput('date', '2026-10-12');
     fixture.componentRef.setInput('urgent', true);
     fixture.detectChanges();
 
