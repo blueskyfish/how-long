@@ -54,6 +54,9 @@
     "smol-toml": "^1.9.0",
     "nx": {
       "undici": "^7.30.0"
+    },
+    "@spartan-ng/cli": {
+      "ts-morph": "^27.0.0"
     }
   }
 }
