@@ -88,9 +88,10 @@ The app is published to GitHub Pages at <https://blueskyfish.github.io/how-long/
 - **A merged pull request** runs [`deploy.yml`](.github/workflows/deploy.yml): the same
   checks and tests again on `main`, then the build with the `/how-long/` base href, then the
   publish. A `guard` job first confirms the commit on `main` came from a merged pull
-  request; anything else is not published.
+  request and that `package.json` has a stable `MAJOR.MINOR.PATCH` version without a
+  suffix; prerelease versions such as `0.3.1-ALPHA` are not published.
 - **Manually**, "Run workflow" on the Deploy workflow in the Actions tab publishes the current
-  `main`.
+  `main` only when its version is stable.
 
 `main` is protected: changes only arrive through pull requests, for administrators too.
 Merging stays a manual step on GitHub.
