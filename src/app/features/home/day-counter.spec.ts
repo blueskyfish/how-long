@@ -45,9 +45,12 @@ describe('DayCounter', () => {
     render(42);
 
     expect(text('current-date')).toBe('2026-10-12');
-    expect(fixture.nativeElement.querySelector('[data-testid="current-date"]').dateTime).toBe(
-      '2026-10-12',
+    const dateElement: HTMLTimeElement = fixture.nativeElement.querySelector(
+      '[data-testid="current-date"]',
     );
+    expect(dateElement.dateTime).toBe('2026-10-12');
+    expect(dateElement.className).toContain('mb-[5cqw]');
+    expect(dateElement.className).toContain('text-[max(0.625rem,4cqw)]');
 
     await TestBed.inject(LanguageService).use('de');
     fixture.detectChanges();
