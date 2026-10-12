@@ -38,11 +38,26 @@ npm run test:e2e   # browser end-to-end tests (Chrome via Playwright)
 npm run build      # production bundle into dist/how-long
 ```
 
-Playwright runs the main user journeys in Chrome and records videos, screenshots, and traces
-for failed tests under `test-results/`; CI uploads these artifacts on failure. Run one browser
-spec with `npx playwright test e2e/countdown.spec.ts`, or install the browser locally with
-`npx playwright install chrome ffmpeg`.
-The Zed task “How Long :: Test :: Playwright (Chrome)” opens the HTML report after the run.
+### Browser tests (Playwright)
+
+Playwright complements the unit tests with end-to-end tests in Chrome against the running app.
+The browser journeys cover countdown and appointment management (including date validation),
+language persistence after reload, backup export/import and invalid files, and the About overlay
+with its displayed version and repository link.
+
+Install Chrome and FFmpeg once, then run the full suite:
+
+```bash
+npx playwright install chrome ffmpeg
+npm run test:e2e
+```
+
+Playwright starts the development server automatically, or reuses one already running at
+`http://127.0.0.1:4200`. To run one spec, pass its path, for example
+`npx playwright test e2e/countdown.spec.ts`. The HTML report is written to `playwright-report/`
+and can be opened with `npx playwright show-report`. Videos, screenshots, and traces are kept
+for failed tests under `test-results/`; CI uploads both directories when a job fails. In Zed,
+the task “How Long :: Test :: Playwright (Chrome)” runs the suite and opens the report.
 
 The production build is a set of static files. Because routing uses the hash location
 strategy and `<base href="./">`, the `dist/how-long/browser` directory can be served from
