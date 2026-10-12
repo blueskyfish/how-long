@@ -27,7 +27,7 @@ import { LocalDatePipe } from '../../core/i18n/local-date.pipe';
       data-testid="day-circle"
     >
       <time
-        class="text-muted-foreground mb-[2cqw] text-[max(0.5rem,3.5cqw)] tabular-nums"
+        class="text-muted-foreground mb-[5cqw] text-[max(0.625rem,4cqw)] tabular-nums"
         [attr.datetime]="date()"
         data-testid="current-date"
         >{{ date() | localDate }}</time
