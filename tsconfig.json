@@ -11,6 +11,7 @@
     "importHelpers": true,
     "target": "ES2022",
     "module": "preserve",
+    "resolveJsonModule": true,
     "paths": {
       "@spartan-ng/helm/button": ["./src/app/ui/button/src/index.ts"],
       "@spartan-ng/helm/utils": ["./src/app/ui/utils/src/index.ts"],

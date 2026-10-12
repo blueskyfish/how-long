@@ -35,6 +35,12 @@
     "more": "Mehr ({{count}})",
     "refreshHint": "Doppelklick zum Aktualisieren",
     "pickAnother": "Countdown {{date}}, anderen wählen",
+    "about": {
+      "open": "Über How long",
+      "title": "Über",
+      "version": "Version {{version}}",
+      "repository": "GitHub-Repository"
+    },
     "allAppointments": {
       "title": "Alle Termine",
       "leadingUp": "Bis zum {{date}}"

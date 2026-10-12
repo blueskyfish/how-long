@@ -16,12 +16,14 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmDialogService } from '@spartan-ng/helm/dialog';
 import { filter, fromEvent, merge, of, switchMap } from 'rxjs';
+import { APP_VERSION } from '../../core/app-info';
 import { CountdownRepository } from '../../core/data/countdown-repository';
 import { Countdown } from '../../core/models';
 import { daysUntil, toIsoDate } from '../../core/services/date-utils';
 import { pickNextCountdown } from '../../core/services/next-countdown';
 import { AppointmentList } from '../../shared/appointment-list';
 import { openDialog } from '../../shared/dialog';
+import { AboutDialog } from './about-dialog';
 import { AllAppointmentsDialog, AllAppointmentsDialogContext } from './all-appointments-dialog';
 import { CountdownPicker } from './countdown-picker';
 import { DayCounter } from './day-counter';
@@ -147,6 +149,15 @@ const URGENT_WITHIN_DAYS = 3;
           <a hlmBtn routerLink="/admin">{{ 'home.createOne' | translate }}</a>
         </div>
       }
+      <button
+        type="button"
+        class="text-muted-foreground/70 hover:text-muted-foreground focus-visible:outline-ring fixed bottom-safe-6 left-1/2 z-10 inline-flex min-h-11 min-w-11 -translate-x-1/2 items-center justify-center rounded-full px-3 text-[10px] transition-colors focus-visible:outline-2"
+        [attr.aria-label]="'home.about.open' | translate"
+        (click)="showAbout()"
+        data-testid="about-button"
+      >
+        v{{ appVersion }}
+      </button>
     </main>
 
     <a
@@ -162,6 +173,8 @@ const URGENT_WITHIN_DAYS = 3;
   `,
 })
 export class HomePage {
+  protected readonly appVersion = APP_VERSION;
+
   /**
    * Bound from the `countdown` query parameter, so the pick survives a reload and
    * the back button steps through it. Unset — or pointing at a countdown that has
@@ -292,5 +305,9 @@ export class HomePage {
       targetDate: countdown.date,
       appointments: this.appointments(),
     });
+  }
+
+  protected showAbout(): void {
+    openDialog<void, Record<string, never>>(this.dialog, AboutDialog, {});
   }
 }
