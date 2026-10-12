@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.1] - 2026-10-12
+
+### Changed
+
+- GitHub Pages now deploys stable app versions only; prereleases stay off the live app.
+
 ## [0.3.0] - 2026-10-12
 
 ### Added
