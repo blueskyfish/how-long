@@ -18,6 +18,9 @@ npm start -- --host 0.0.0.0                  # reachable from a phone on the LAN
 npm test                                     # Vitest in watch mode
 npm test -- --watch=false                    # single run
 npm test -- --watch=false --include <path>   # one spec; a source file path runs its .spec.ts
+npm run test:e2e                             # Playwright end-to-end tests in Chrome
+npx playwright test e2e/<name>.spec.ts       # one browser spec
+npx playwright install chrome ffmpeg         # install Chrome and video support locally
 npm run build                                # production bundle into dist/how-long
 npx prettier --write .                       # format (there is no ESLint)
 ```
@@ -125,6 +128,8 @@ Vitest + jsdom + `fake-indexeddb` (loaded in `src/test-setup.ts`). Database spec
 - Use `stubDialog(result)` from `src/testing/dialog.ts` to resolve a dialog without
   rendering it, and `provideNotificationSpy()` from `src/testing/notification.ts` to assert
   on toasts.
+- Playwright browser tests live in `e2e/`; videos, screenshots, and traces are retained for
+  failed tests in `test-results/`.
 
 ## Commits
 

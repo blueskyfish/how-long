@@ -34,6 +34,14 @@
     "tags": ["test"]
   },
   {
+    "label": "How Long :: Test :: Playwright (Chrome)",
+    "command": "npm run test:e2e",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "tags": ["test"]
+  },
+  {
     "label": "How Long :: Test :: Current File",
     "command": "npm test -- --watch=false --include \"$ZED_RELATIVE_FILE\"",
     "use_new_terminal": false,

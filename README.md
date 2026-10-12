@@ -33,9 +33,15 @@ Node and npm are pinned in [`mise.toml`](mise.toml) (Node 24, npm 12); with
 ```bash
 npm install
 npm start          # dev server on http://localhost:4200
-npm test           # unit tests (vitest, single run: npm test -- --no-watch)
+npm test           # unit tests (vitest, single run: npm test -- --watch=false)
+npm run test:e2e   # browser end-to-end tests (Chrome via Playwright)
 npm run build      # production bundle into dist/how-long
 ```
+
+Playwright runs the main user journeys in Chrome and records videos, screenshots, and traces
+for failed tests under `test-results/`; CI uploads these artifacts on failure. Run one browser
+spec with `npx playwright test e2e/countdown.spec.ts`, or install the browser locally with
+`npx playwright install chrome ffmpeg`.
 
 The production build is a set of static files. Because routing uses the hash location
 strategy and `<base href="./">`, the `dist/how-long/browser` directory can be served from
