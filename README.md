@@ -42,6 +42,7 @@ Playwright runs the main user journeys in Chrome and records videos, screenshots
 for failed tests under `test-results/`; CI uploads these artifacts on failure. Run one browser
 spec with `npx playwright test e2e/countdown.spec.ts`, or install the browser locally with
 `npx playwright install chrome ffmpeg`.
+The Zed task “How Long :: Test :: Playwright (Chrome)” opens the HTML report after the run.
 
 The production build is a set of static files. Because routing uses the hash location
 strategy and `<base href="./">`, the `dist/how-long/browser` directory can be served from
