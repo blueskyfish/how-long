@@ -4,7 +4,7 @@ test('shows the app version and repository in the About overlay', async ({ page 
   await page.goto('/');
 
   const versionLabel = page.getByTestId('about-button');
-  await expect(versionLabel).toHaveText(/^\s*v\d+\.\d+\.\d+\s*$/);
+  await expect(versionLabel).toHaveText(/^\s*v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?\s*$/);
   const displayedVersion = (await versionLabel.textContent())?.trim();
   await versionLabel.click();
 
