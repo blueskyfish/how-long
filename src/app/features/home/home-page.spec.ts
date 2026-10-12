@@ -84,6 +84,7 @@ describe('HomePage', () => {
 
     await render();
 
+    expect(text('current-date')).toBe(toIsoDate(today));
     expect(text('day-count')).toBe('42');
     expect(text('day-label')).toBe('days to go');
     expect(text('target-date')).toBe(inDays(42));

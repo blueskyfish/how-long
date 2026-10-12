@@ -95,6 +95,7 @@ const URGENT_WITHIN_DAYS = 3;
         <div class="landscape-phone:min-w-0 landscape-phone:flex-1">
           <app-day-counter
             [days]="daysRemaining()"
+            [date]="todayDate()"
             [urgent]="urgent()"
             (dblclick)="refresh()"
             [attr.title]="'home.refreshHint' | translate"
@@ -182,6 +183,8 @@ export class HomePage {
    * date follows, since the data itself is already live.
    */
   private readonly today = signal(new Date());
+
+  protected readonly todayDate = computed(() => toIsoDate(this.today()));
 
   /** One full turn of the indicator at the threshold. */
   protected readonly pullRotation = computed(

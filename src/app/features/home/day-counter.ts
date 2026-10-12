@@ -7,6 +7,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { translate } from '@ngx-translate/core';
+import { LocalDatePipe } from '../../core/i18n/local-date.pipe';
 
 /**
  * The headline of the start page: the remaining day count inside a circle.
@@ -17,6 +18,7 @@ import { translate } from '@ngx-translate/core';
 @Component({
   selector: 'app-day-counter',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [LocalDatePipe],
   template: `
     <div
       #circle
@@ -24,6 +26,12 @@ import { translate } from '@ngx-translate/core';
       [attr.data-urgent]="urgent() ? '' : null"
       data-testid="day-circle"
     >
+      <time
+        class="text-muted-foreground mb-[2cqw] text-[max(0.5rem,3.5cqw)] tabular-nums"
+        [attr.datetime]="date()"
+        data-testid="current-date"
+        >{{ date() | localDate }}</time
+      >
       <span
         class="font-bold leading-none tabular-nums"
         [class]="sizeClass()"
@@ -41,6 +49,9 @@ import { translate } from '@ngx-translate/core';
 export class DayCounter {
   /** Days until the target date; negative once it has passed. */
   readonly days = input.required<number>();
+
+  /** The current day as a `yyyy-mm-dd` string. */
+  readonly date = input.required<string>();
 
   /** The target date is close: the rim turns red and the circle glows. */
   readonly urgent = input(false);
