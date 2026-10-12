@@ -8,6 +8,7 @@ until the date that matters?** Below the number it lists the milestones on the w
 - [Features](#features)
 - [Running it](#running-it)
   - [Browser tests (Playwright)](#browser-tests-playwright)
+- [Contributing](#contributing)
 - [Deployment](#deployment)
 - [Releases](#releases)
 - [Architecture](#architecture)
@@ -77,6 +78,11 @@ strategy and `<base href="./">`, the `dist/how-long/browser` directory can be se
 any path — no server-side rewrite rules required. The service worker is the exception: with
 a relative base href it looks for its files at the server root, so a build served from a
 sub-path needs that path as its base href (`npm run build -- --base-href /how-long/`).
+
+## Contributing
+
+Contributions and bug reports are welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for
+guidance on reporting issues and preparing pull requests.
 
 ## Deployment
 
