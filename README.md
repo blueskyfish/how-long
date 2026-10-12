@@ -9,6 +9,7 @@ until the date that matters?** Below the number it lists the milestones on the w
 - [Running it](#running-it)
   - [Browser tests (Playwright)](#browser-tests-playwright)
 - [Deployment](#deployment)
+- [Releases](#releases)
 - [Architecture](#architecture)
 - [Languages](#languages)
 - [Testing](#testing)
@@ -93,6 +94,15 @@ The app is published to GitHub Pages at <https://blueskyfish.github.io/how-long/
 
 `main` is protected: changes only arrive through pull requests, for administrators too.
 Merging stays a manual step on GitHub.
+
+## Releases
+
+The app is a private package and is not published to npm. User-facing changes are recorded
+in [`CHANGELOG.md`](CHANGELOG.md) when a version bump is prepared with the
+[`bump-publish` skill](.github/skills/bump-publish/SKILL.md). That workflow opens a version
+pull request; after it is merged, rerun the skill with the same version to publish a
+matching GitHub Release and tag. GitHub Pages deployment continues to run automatically
+after the pull request is merged.
 
 ## Architecture
 
