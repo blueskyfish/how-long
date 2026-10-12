@@ -3,6 +3,10 @@
 A small progressive web app that answers one question in very large type: **how many days
 until the date that matters?** Below the number it lists the milestones on the way there.
 
+<p align="center">
+  <img src="docs/screenshots/iphone-countdown.png" alt="How long showing a Christmas countdown and upcoming appointments in an iPhone frame" width="360">
+</p>
+
 Everything is stored locally in IndexedDB — there is no backend and no account. Data moves
 between devices as a JSON file you download and drop back in.
 
