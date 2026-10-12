@@ -34,7 +34,9 @@ The same commands exist as Zed tasks in `.zed/tasks.json`, with debug configurat
   `npm audit --audit-level=high`, the tests and a build. Keep all four green; its `test` job is
   a required check of the branch protection.
 - `.github/workflows/deploy.yml` publishes to GitHub Pages after a pull request is merged
-  into `main` (a `guard` job skips commits that did not come from a merged pull request).
+  into `main` only when `package.json` contains a stable `MAJOR.MINOR.PATCH` version without
+  a suffix. Its `guard` job skips commits that did not come from a merged pull request and
+  prerelease versions; manual runs are subject to the same version check.
   The Pages build uses `--base-href /how-long/`: with the relative `./` base href the service
   worker would fetch its files from the server root and never install.
 - `main` is protected and accepts changes only through pull requests. Never push to it

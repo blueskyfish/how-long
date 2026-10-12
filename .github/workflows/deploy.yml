@@ -1,8 +1,9 @@
 # Tests, builds and publishes the app to GitHub Pages after a pull request has
-# been merged into main. The branch protection on main only accepts changes
-# through pull requests; the `guard` job checks it once more, so a commit that
-# reached main any other way is never published. A manual run from the Actions
-# tab publishes the current main.
+# been merged into main. Only stable MAJOR.MINOR.PATCH versions are published.
+# The branch protection on main only accepts changes through pull requests;
+# the `guard` job checks it once more, so a commit that reached main any other
+# way is never published. A manual run from the Actions tab publishes the
+# current main only when its version is stable.
 name: Deploy
 
 on:
@@ -27,6 +28,8 @@ jobs:
     outputs:
       deploy: ${{ steps.check.outputs.deploy }}
     steps:
+      - uses: actions/checkout@v7
+
       - name: Check that the commit comes from a merged pull request
         id: check
         env:
@@ -35,6 +38,14 @@ jobs:
           REF: ${{ github.ref }}
           SHA: ${{ github.sha }}
         run: |
+          version=$(node -p "require('./package.json').version")
+          if ! node -e 'process.exit(/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(process.argv[1]) ? 0 : 1)' "$version"; then
+            echo "Version $version is not a stable MAJOR.MINOR.PATCH version; not publishing."
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Version $version is stable."
+
           if [ "$EVENT" = "workflow_dispatch" ]; then
             if [ "$REF" = "refs/heads/main" ]; then
               echo "Manual run on main."
