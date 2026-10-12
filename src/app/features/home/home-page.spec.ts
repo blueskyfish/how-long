@@ -3,18 +3,21 @@ import { By } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { provideRouter } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { stubDialog } from '../../../testing/dialog';
+import { provideTestI18n } from '../../../testing/i18n';
+import { provideTestIcons } from '../../../testing/icons';
+import { settle } from '../../../testing/settle';
+import { memoryStorage } from '../../../testing/storage';
+import { touch } from '../../../testing/touch';
+import { APP_VERSION } from '../../core/app-info';
 import { CountdownRepository } from '../../core/data/countdown-repository';
 import { HOW_LONG_DB, HowLongDatabase } from '../../core/data/db';
 import { LanguageService } from '../../core/i18n/language.service';
 import { toIsoDate } from '../../core/services/date-utils';
-import { settle } from '../../../testing/settle';
-import { memoryStorage } from '../../../testing/storage';
+import { AboutDialog } from './about-dialog';
 import { CountdownPicker } from './countdown-picker';
 import { HomePage } from './home-page';
 import { COUNTDOWN_STORAGE } from './remembered-countdown';
-import { provideTestIcons } from '../../../testing/icons';
-import { touch } from '../../../testing/touch';
-import { provideTestI18n } from '../../../testing/i18n';
 
 describe('HomePage', () => {
   let db: HowLongDatabase;
@@ -243,6 +246,25 @@ describe('HomePage', () => {
     expect(
       fixture.nativeElement.querySelector('[data-testid="admin-fab"]').getAttribute('href'),
     ).toBe('/admin');
+  });
+
+  it('shows the version and opens the About overlay', async () => {
+    await render();
+    const open = stubDialog(undefined);
+    const button: HTMLButtonElement = fixture.nativeElement.querySelector(
+      '[data-testid="about-button"]',
+    );
+
+    expect(button.textContent.trim()).toBe(`v${APP_VERSION}`);
+    expect(button.getAttribute('aria-label')).toBe('About How long');
+    expect(button.classList).toContain('text-[10px]');
+    expect(button.classList).toContain('min-h-11');
+    button.click();
+
+    expect(open).toHaveBeenCalledWith(
+      AboutDialog,
+      expect.objectContaining({ context: {}, contentClass: expect.any(String) }),
+    );
   });
 
   describe('remembering the pick', () => {
