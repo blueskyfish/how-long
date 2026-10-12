@@ -5,6 +5,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 `README.md` is the detailed reference (data model, layout rules, backup format). This file
 summarises what matters when changing code.
 
+## Communication and language
+
+- Write chat responses in German.
+- Write documentation and source-code comments in English.
+
 ## Commands
 
 ```bash
