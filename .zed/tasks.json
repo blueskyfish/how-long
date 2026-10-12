@@ -35,7 +35,7 @@
   },
   {
     "label": "How Long :: Test :: Playwright (Chrome)",
-    "command": "npm run test:e2e",
+    "command": "npm run test:e2e && npx playwright show-report",
     "use_new_terminal": false,
     "allow_concurrent_runs": false,
     "reveal": "always",
