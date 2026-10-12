@@ -3,6 +3,18 @@
 A small progressive web app that answers one question in very large type: **how many days
 until the date that matters?** Below the number it lists the milestones on the way there.
 
+## Contents
+
+- [Features](#features)
+- [Running it](#running-it)
+  - [Browser tests (Playwright)](#browser-tests-playwright)
+- [Deployment](#deployment)
+- [Architecture](#architecture)
+- [Languages](#languages)
+- [Testing](#testing)
+- [Regenerating Spartan components](#regenerating-spartan-components)
+- [Adding an icon](#adding-an-icon)
+
 <p align="center">
   <img src="docs/screenshots/iphone-countdown.png" alt="How long showing a Christmas countdown and upcoming appointments in an iPhone frame" width="360">
 </p>
