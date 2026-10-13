@@ -18,21 +18,28 @@ npm start -- --host 0.0.0.0                  # reachable from a phone on the LAN
 npm test                                     # Vitest in watch mode
 npm test -- --watch=false                    # single run
 npm test -- --watch=false --include <path>   # one spec; a source file path runs its .spec.ts
+npm test -- --watch=false --include src/app/features/home/home-page.spec.ts
 npm run test:e2e                             # Playwright end-to-end tests in Chrome
-npx playwright test e2e/<name>.spec.ts       # one browser spec
-npx playwright install chrome ffmpeg         # install Chrome and video support locally
+npx playwright test e2e/<name>.spec.ts      # one browser spec
+npx playwright test e2e/countdown.spec.ts   # example: run the countdown browser spec
+npx playwright install chrome ffmpeg        # install Chrome and video support locally
 npm run build                                # production bundle into dist/how-long
 npx prettier --write .                       # format (there is no ESLint)
+npx prettier --check .                       # check formatting
+npm audit --audit-level=high                 # check for high-severity vulnerabilities
 ```
 
-The same commands exist as Zed tasks in `.zed/tasks.json`, with debug configurations in
-`.zed/debug.json`. Node 24 and npm 12 are pinned in `mise.toml`, which CI reads as well.
+The test `--include` value can be a spec path or the corresponding source file path.
+The same commands are available as Zed tasks in `.zed/tasks.json`, with debug
+configurations in `.zed/debug.json`.
+Node 24 and npm 12 are pinned in `mise.toml`, which CI reads as well.
 
 ## CI and deployment
 
 - `.github/workflows/ci.yml` runs on pull requests into `main`: `prettier --check .`,
-  `npm audit --audit-level=high`, the tests and a build. Keep all four green; its `test` job is
-  a required check of the branch protection.
+  `npm audit --audit-level=high`, the tests and a build. It also runs Playwright browser
+  tests in Chrome and uploads recordings and traces if they fail. Keep the checks green;
+  its `test` job is a required check of the branch protection.
 - `.github/workflows/deploy.yml` publishes to GitHub Pages after a pull request is merged
   into `main` only when `package.json` contains a stable `MAJOR.MINOR.PATCH` version without
   a suffix. Its `guard` job skips commits that did not come from a merged pull request and
