@@ -194,6 +194,11 @@ export class HomePage {
   }
 
   protected showAbout(): void {
-    openDialog<void, Record<string, never>>(this.dialog, AboutDialog, {});
+    openDialog<void, Record<string, never>>(
+      this.dialog,
+      AboutDialog,
+      {},
+      { showCloseButton: false },
+    );
   }
 }
