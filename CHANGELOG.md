@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.3] - 2026-10-13
+
+### Added
+
+- The number of days until each appointment is now shown.
+
+### Changed
+
+- The About screen has a refined layout.
+
 ## [0.3.2] - 2026-10-13
 
 ## [0.3.1] - 2026-10-12
