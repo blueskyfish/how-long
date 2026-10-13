@@ -14,6 +14,7 @@ until the date that matters?** Below the number it lists the milestones on the w
 - [Architecture](#architecture)
 - [Languages](#languages)
 - [Testing](#testing)
+- [MCP integration](docs/mcp-integration-plan.md)
 - [Regenerating Spartan components](#regenerating-spartan-components)
 - [Adding an icon](#adding-an-icon)
 

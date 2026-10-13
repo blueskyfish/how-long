@@ -1,0 +1,12 @@
+{
+  "context_servers": {
+    "angular-cli": {
+      "command": "npx",
+      "args": ["ng", "mcp", "--read-only"]
+    },
+    "spartan-ui": {
+      "command": "npx",
+      "args": ["-y", "@spartan-ng/mcp@1.6.3"]
+    }
+  }
+}
