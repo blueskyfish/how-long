@@ -6,6 +6,7 @@ import {
   effect,
   inject,
   input,
+  Resource,
   signal,
   viewChild,
 } from '@angular/core';
@@ -189,6 +190,7 @@ export class HomePage {
   private readonly document = inject(DOCUMENT);
   private readonly dayCounter = viewChild(DayCounter);
   protected readonly pull = inject(PullToRefresh);
+  readonly countdownsResource = input<Resource<Countdown[]>>();
 
   /**
    * Held still while the page is open, so the day count does not jump under the
@@ -204,7 +206,7 @@ export class HomePage {
     () => (this.pull.distance() / PULL_THRESHOLD_PX) * 360,
   );
 
-  protected readonly countdowns = toSignal(this.repository.watchCountdowns(), { initialValue: [] });
+  protected readonly countdowns = computed(() => this.countdownsResource()?.value() ?? []);
 
   /** The countdown named by the query parameter, if it still exists. */
   private readonly fromUrl = computed(() =>

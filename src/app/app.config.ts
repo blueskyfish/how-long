@@ -10,6 +10,7 @@ import {
   withComponentInputBinding,
   withHashLocation,
   withInMemoryScrolling,
+  withRouterResources,
 } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
 import { provideIcons, provideNgIconLoader, withCaching } from '@ng-icons/core';
@@ -30,6 +31,7 @@ export const routerFeatures = [
   withHashLocation(),
   withComponentInputBinding(),
   withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
+  withRouterResources(),
 ] as const;
 
 export const appConfig: ApplicationConfig = {

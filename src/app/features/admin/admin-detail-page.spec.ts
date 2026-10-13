@@ -1,6 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { routerFeatures } from '../../app.config';
+import { routes } from '../../app.routes';
 import { CountdownRepository } from '../../core/data/countdown-repository';
 import { HOW_LONG_DB, HowLongDatabase } from '../../core/data/db';
 import { settle } from '../../../testing/settle';
@@ -15,7 +18,8 @@ import { provideTestI18n } from '../../../testing/i18n';
 describe('AdminDetailPage', () => {
   let db: HowLongDatabase;
   let repository: CountdownRepository;
-  let fixture: ComponentFixture<AdminDetailPage>;
+  let fixture: ComponentFixture<unknown>;
+  let harness: RouterTestingHarness;
   let countdownId: number;
   let notifications: ReturnType<typeof provideNotificationSpy>['notifications'];
 
@@ -27,7 +31,7 @@ describe('AdminDetailPage', () => {
       providers: [
         ...provideTestI18n(),
         { provide: HOW_LONG_DB, useValue: db },
-        provideRouter([]),
+        provideRouter(routes, ...routerFeatures),
         provideTestIcons(),
         notificationSpy.provider,
       ],
@@ -45,8 +49,9 @@ describe('AdminDetailPage', () => {
   });
 
   async function render(id: number | string = countdownId): Promise<void> {
-    fixture = TestBed.createComponent(AdminDetailPage);
-    fixture.componentRef.setInput('id', String(id));
+    harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl(`/admin/${id}`, AdminDetailPage);
+    fixture = harness.fixture;
     await settle(fixture);
   }
 
@@ -78,6 +83,15 @@ describe('AdminDetailPage', () => {
       ...fixture.nativeElement.querySelectorAll('main li > span > span:first-child'),
     ].map((node: Element) => node.textContent?.trim());
     expect(titles).toEqual(['Advent', 'St Nicholas']);
+  });
+
+  it('updates the appointments resource when an appointment is created', async () => {
+    await render();
+
+    await addAppointment('2026-12-01', 'Advent');
+    await settle(fixture);
+
+    expect(fixture.nativeElement.textContent).toContain('Advent');
   });
 
   it('reports a countdown that does not exist', async () => {
@@ -160,9 +174,9 @@ describe('AdminDetailPage', () => {
       const other = await repository.createCountdown({ date: '2027-06-01' });
       await render();
       await addAppointmentThroughDialog(saved('Celebrations'));
-      fixture.componentRef.setInput('id', String(other));
+      await harness.navigateByUrl(`/admin/${other}`, AdminDetailPage);
       await settle(fixture);
-      fixture.componentRef.setInput('id', String(countdownId));
+      await harness.navigateByUrl(`/admin/${countdownId}`, AdminDetailPage);
       await settle(fixture);
 
       const context = await addAppointmentThroughDialog(undefined);
