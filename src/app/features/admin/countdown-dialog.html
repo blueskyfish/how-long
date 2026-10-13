@@ -1,0 +1,47 @@
+<form [formRoot]="form" (submit)="save()" class="grid gap-6">
+  <div hlmDialogHeader>
+    <h2 hlmDialogTitle>
+      {{
+        (context.countdown ? 'countdownDialog.titleEdit' : 'countdownDialog.titleNew') | translate
+      }}
+    </h2>
+  </div>
+
+  <div class="grid gap-4">
+    <div class="grid gap-2">
+      <label hlmLabel for="countdown-date">{{ 'countdownDialog.date' | translate }}</label>
+      <app-iso-date-field
+        inputId="countdown-date"
+        [formField]="form.date"
+        (edited)="dateTouched.set(true)"
+      />
+      @if (dateTouched() && form.date().invalid()) {
+        <p class="text-destructive text-sm" data-testid="date-error">
+          {{ 'countdownDialog.dateError' | translate }}
+        </p>
+      }
+    </div>
+
+    <div class="grid gap-2">
+      <label hlmLabel for="countdown-description">
+        {{ 'countdownDialog.description' | translate }}
+      </label>
+      <input
+        hlmInput
+        id="countdown-description"
+        type="text"
+        [formField]="form.description"
+        [placeholder]="'countdownDialog.optional' | translate"
+      />
+    </div>
+  </div>
+
+  <div hlmDialogFooter>
+    <button hlmBtn variant="outline" type="button" (click)="cancel()" data-testid="cancel">
+      {{ 'common.cancel' | translate }}
+    </button>
+    <button hlmBtn type="submit" [disabled]="form().invalid()" data-testid="save">
+      {{ 'common.save' | translate }}
+    </button>
+  </div>
+</form>

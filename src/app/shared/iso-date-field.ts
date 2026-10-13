@@ -33,40 +33,7 @@ import { calendarI18n } from './calendar-i18n';
   selector: 'app-iso-date-field',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [HlmDatePickerImports, HlmInput, TranslatePipe],
-  template: `
-    @if (native) {
-      <input
-        hlmInput
-        type="date"
-        class="appearance-none"
-        [id]="inputId()"
-        [value]="value()"
-        [max]="latest() ?? null"
-        [disabled]="disabled()"
-        (input)="onNativeInput($event)"
-      />
-    } @else {
-      <hlm-date-picker
-        autoCloseOnSelect
-        align="end"
-        [date]="date()"
-        [maxDate]="latestDate()"
-        [disabled]="disabled()"
-        [formatDate]="format"
-        (dateChange)="onPick($event)"
-        (input)="onTyping($event)"
-      >
-        <hlm-date-picker-input
-          [inputId]="inputId()"
-          [placeholder]="'dateField.placeholder' | translate"
-          [parseDate]="parse"
-          [formatInputDate]="format"
-          [calendarAriaLabel]="'dateField.openCalendar' | translate"
-          [clearAriaLabel]="'dateField.clear' | translate"
-        />
-      </hlm-date-picker>
-    }
-  `,
+  templateUrl: './iso-date-field.html',
 })
 export class IsoDateField implements FormValueControl<string> {
   private readonly language = inject(LanguageService);

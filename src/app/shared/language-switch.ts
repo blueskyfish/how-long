@@ -11,41 +11,7 @@ import { Language } from '../core/i18n/languages';
   selector: 'app-language-switch',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [HlmButton, HlmDropdownMenuImports, NgIcon, TranslatePipe],
-  template: `
-    <button
-      hlmBtn
-      variant="ghost"
-      size="sm"
-      class="font-mono uppercase"
-      [hlmDropdownMenuTrigger]="menu"
-      align="end"
-      [attr.aria-label]="'language.label' | translate"
-      data-testid="language-switch"
-    >
-      {{ language.current() }}
-    </button>
-
-    <ng-template #menu>
-      <div hlmDropdownMenu class="min-w-40" data-testid="language-menu">
-        @for (option of language.languages; track option) {
-          <button
-            hlmDropdownMenuItem
-            class="w-full"
-            [attr.aria-current]="option === language.current()"
-            [attr.data-testid]="'language-option-' + option"
-            (click)="choose(option)"
-          >
-            <ng-icon
-              name="lucideCheck"
-              class="text-base"
-              [class.invisible]="option !== language.current()"
-            />
-            {{ 'language.' + option | translate }}
-          </button>
-        }
-      </div>
-    </ng-template>
-  `,
+  templateUrl: './language-switch.html',
 })
 export class LanguageSwitch {
   protected readonly language = inject(LanguageService);
