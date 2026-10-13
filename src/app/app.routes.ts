@@ -28,6 +28,17 @@ export const routes: Routes = [
     title: 'Countdowns',
     loadComponent: () =>
       import('./features/admin/admin-overview-page').then((m) => m.AdminOverviewPage),
+    resources: () => {
+      const repository = inject(CountdownRepository);
+      return {
+        countdownsResource: nonBlocking(
+          rxResource({
+            defaultValue: [],
+            stream: () => repository.watchCountdowns(),
+          }),
+        ),
+      };
+    },
   },
   {
     path: 'admin/:id',

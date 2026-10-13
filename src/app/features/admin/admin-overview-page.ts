@@ -1,5 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  Resource,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -30,6 +37,8 @@ import { CountdownDialog, CountdownDialogContext, CountdownDialogResult } from '
   templateUrl: './admin-overview-page.html',
 })
 export class AdminOverviewPage {
+  readonly countdownsResource = input<Resource<Countdown[]>>();
+
   private readonly repository = inject(CountdownRepository);
   private readonly dialog = inject(HlmDialogService);
   protected readonly backups = inject(BackupActions);
@@ -40,7 +49,7 @@ export class AdminOverviewPage {
 
   private readonly today = new Date();
 
-  protected readonly countdowns = toSignal(this.repository.watchCountdowns(), { initialValue: [] });
+  protected readonly countdowns = computed(() => this.countdownsResource()?.value() ?? []);
   protected readonly dragging = signal(false);
 
   /** Which text says how far off a countdown is, and the number it needs. */
