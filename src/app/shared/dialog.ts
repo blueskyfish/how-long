@@ -10,9 +10,11 @@ export function openDialog<TResult, TContext extends object>(
   service: HlmDialogService,
   component: ComponentType<unknown>,
   context: TContext,
+  options: { showCloseButton?: boolean } = {},
 ): Promise<TResult | undefined> {
   const ref = service.open<TResult, TContext>(component, {
     context,
+    ...options,
     // Both dimensions are measured against the viewport rather than the pane:
     // the CDK sizes its panes to their content, so the `w-full` / `max-h-full`
     // the dialog itself carries resolve against that content box and are

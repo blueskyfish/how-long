@@ -38,8 +38,7 @@
     "about": {
       "open": "Über How long",
       "title": "Über",
-      "version": "Version {{version}}",
-      "repository": "GitHub-Repository"
+      "version": "Version {{version}}"
     },
     "allAppointments": {
       "title": "Alle Termine",
