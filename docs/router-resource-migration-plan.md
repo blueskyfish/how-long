@@ -23,8 +23,8 @@ preview API, not a stable replacement for the existing subscriptions.
 
 ## Proposed scope
 
-Migrate the home page and admin detail page, where the data is directly driven by route
-parameters. Leave the admin overview's live countdown list unchanged.
+Migrate the home page and both admin pages. The home page and admin overview consume the live
+countdown list; the admin detail page consumes the live countdown and appointment list.
 
 Enable router resources in the shared `routerFeatures` configuration so the application and
 routing tests exercise the same router setup. Bind the non-blocking resources to page inputs
@@ -39,8 +39,9 @@ database emission.
 ## Migration steps
 
 1. Add `withRouterResources()` to `routerFeatures`.
-2. Define route resources for the home countdown list and admin detail countdown and
-   appointments, using the route's query/path parameter signals as resource requests.
+2. Define route resources for the home and admin overview countdown lists, and the admin
+   detail countdown and appointments, using the route's query/path parameter signals where
+   applicable.
 3. Bind returned values to explicit component inputs and remove the corresponding
    component-owned route-to-observable subscriptions.
 4. Preserve existing behavior:

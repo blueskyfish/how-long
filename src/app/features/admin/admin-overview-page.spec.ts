@@ -1,6 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { routerFeatures } from '../../app.config';
+import { routes } from '../../app.routes';
 import { CountdownRepository } from '../../core/data/countdown-repository';
 import { HOW_LONG_DB, HowLongDatabase } from '../../core/data/db';
 import { settle } from '../../../testing/settle';
@@ -14,7 +17,8 @@ import { provideTestI18n } from '../../../testing/i18n';
 describe('AdminOverviewPage', () => {
   let db: HowLongDatabase;
   let repository: CountdownRepository;
-  let fixture: ComponentFixture<AdminOverviewPage>;
+  let fixture: ComponentFixture<unknown>;
+  let harness: RouterTestingHarness;
   let notifications: ReturnType<typeof provideNotificationSpy>['notifications'];
 
   beforeEach(async () => {
@@ -25,7 +29,7 @@ describe('AdminOverviewPage', () => {
       providers: [
         ...provideTestI18n(),
         { provide: HOW_LONG_DB, useValue: db },
-        provideRouter([]),
+        provideRouter(routes, ...routerFeatures),
         provideTestIcons(),
         notificationSpy.provider,
       ],
@@ -39,7 +43,9 @@ describe('AdminOverviewPage', () => {
   });
 
   async function render(): Promise<void> {
-    fixture = TestBed.createComponent(AdminOverviewPage);
+    harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/admin', AdminOverviewPage);
+    fixture = harness.fixture;
     await settle(fixture);
   }
 
@@ -58,6 +64,15 @@ describe('AdminOverviewPage', () => {
     expect(rows[1]).toContain('2026-12-24');
   });
 
+  it('updates the countdown resource when a countdown is created', async () => {
+    await render();
+
+    await repository.createCountdown({ date: '2026-12-24', description: 'Christmas' });
+    await settle(fixture);
+
+    expect(fixture.nativeElement.querySelector('main li')?.textContent).toContain('Christmas');
+  });
+
   it('explains how to get started when there is nothing stored', async () => {
     await render();
 
@@ -70,7 +85,7 @@ describe('AdminOverviewPage', () => {
     await render();
 
     expect(fixture.nativeElement.querySelector('main li a').getAttribute('href')).toBe(
-      `/admin/${id}`,
+      `#/admin/${id}`,
     );
   });
 
@@ -122,9 +137,9 @@ describe('AdminOverviewPage', () => {
     await render();
     const dataTransfer = { types: ['Files'] } as unknown as DataTransfer;
 
-    fixture.nativeElement.dispatchEvent(
-      Object.assign(new Event('dragover', { bubbles: true }), { dataTransfer }),
-    );
+    fixture.nativeElement
+      .querySelector('app-admin-overview-page')
+      .dispatchEvent(Object.assign(new Event('dragover', { bubbles: true }), { dataTransfer }));
     await settle(fixture, 2);
 
     expect(fixture.nativeElement.textContent).toContain('Drop a JSON backup to import');
@@ -134,9 +149,9 @@ describe('AdminOverviewPage', () => {
     await render();
     const dataTransfer = { types: ['text/plain'] } as unknown as DataTransfer;
 
-    fixture.nativeElement.dispatchEvent(
-      Object.assign(new Event('dragover', { bubbles: true }), { dataTransfer }),
-    );
+    fixture.nativeElement
+      .querySelector('app-admin-overview-page')
+      .dispatchEvent(Object.assign(new Event('dragover', { bubbles: true }), { dataTransfer }));
     await settle(fixture, 2);
 
     expect(fixture.nativeElement.textContent).not.toContain('Drop a JSON backup to import');
