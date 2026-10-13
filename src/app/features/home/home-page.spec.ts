@@ -1,8 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { Router } from '@angular/router';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { routerFeatures } from '../../app.config';
+import { routes } from '../../app.routes';
 import { stubDialog } from '../../../testing/dialog';
 import { provideTestI18n } from '../../../testing/i18n';
 import { provideTestIcons } from '../../../testing/icons';
@@ -22,7 +24,8 @@ import { COUNTDOWN_STORAGE } from './remembered-countdown';
 describe('HomePage', () => {
   let db: HowLongDatabase;
   let repository: CountdownRepository;
-  let fixture: ComponentFixture<HomePage>;
+  let fixture: ComponentFixture<unknown>;
+  let harness: RouterTestingHarness | undefined;
   let storage: Storage;
 
   const today = new Date();
@@ -35,12 +38,13 @@ describe('HomePage', () => {
   beforeEach(async () => {
     db = new HowLongDatabase(`how-long-home-${crypto.randomUUID()}`);
     storage = memoryStorage();
+    harness = undefined;
     TestBed.configureTestingModule({
       providers: [
         ...provideTestI18n(),
         { provide: HOW_LONG_DB, useValue: db },
         { provide: COUNTDOWN_STORAGE, useValue: storage },
-        provideRouter([]),
+        provideRouter(routes, ...routerFeatures),
         provideTestIcons(),
       ],
     });
@@ -54,10 +58,10 @@ describe('HomePage', () => {
 
   /** Creates the component and lets its Dexie live queries settle. */
   async function render(selectedId?: number | string): Promise<void> {
-    fixture = TestBed.createComponent(HomePage);
-    if (selectedId !== undefined) {
-      fixture.componentRef.setInput('countdown', String(selectedId));
-    }
+    harness ??= await RouterTestingHarness.create();
+    const url = selectedId === undefined ? '/' : `/?countdown=${selectedId}`;
+    await harness.navigateByUrl(url, HomePage);
+    fixture = harness.fixture;
     await settle(fixture);
   }
 
@@ -94,6 +98,15 @@ describe('HomePage', () => {
     expect(text('description')).toBe('Project launch');
   });
 
+  it('updates the countdown resource when a countdown is created', async () => {
+    await render();
+
+    await repository.createCountdown({ date: inDays(10), description: 'New countdown' });
+    await settle(fixture);
+
+    expect(text('description')).toBe('New countdown');
+  });
+
   it('uses the singular label one day before the target', async () => {
     await repository.createCountdown({ date: inDays(1) });
 
@@ -123,7 +136,9 @@ describe('HomePage', () => {
 
   describe('when the target date is close', () => {
     const isUrgent = () => ({
-      page: (fixture.nativeElement as HTMLElement).hasAttribute('data-urgent'),
+      page: (fixture.nativeElement.querySelector('app-home-page') as HTMLElement).hasAttribute(
+        'data-urgent',
+      ),
       circle: fixture.nativeElement
         .querySelector('[data-testid="day-circle"]')
         .hasAttribute('data-urgent'),
@@ -245,7 +260,7 @@ describe('HomePage', () => {
 
     expect(
       fixture.nativeElement.querySelector('[data-testid="admin-fab"]').getAttribute('href'),
-    ).toBe('/admin');
+    ).toBe('#/admin');
   });
 
   it('shows the version and opens the About overlay', async () => {
@@ -272,12 +287,13 @@ describe('HomePage', () => {
     async function reopen(): Promise<void> {
       fixture.destroy();
       TestBed.resetTestingModule();
+      harness = undefined;
       TestBed.configureTestingModule({
         providers: [
           ...provideTestI18n(),
           { provide: HOW_LONG_DB, useValue: db },
           { provide: COUNTDOWN_STORAGE, useValue: storage },
-          provideRouter([]),
+          provideRouter(routes, ...routerFeatures),
           provideTestIcons(),
         ],
       });
@@ -308,7 +324,6 @@ describe('HomePage', () => {
       const sooner = await repository.createCountdown({ date: inDays(10), description: 'Sooner' });
       const later = await repository.createCountdown({ date: inDays(60), description: 'Later' });
       await render(later);
-      fixture.destroy();
 
       await render(sooner);
 

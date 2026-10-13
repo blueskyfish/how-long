@@ -1,15 +1,22 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  Resource,
+  computed,
+  effect,
+  inject,
+  input,
+} from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmDialogService } from '@spartan-ng/helm/dialog';
-import { of, switchMap } from 'rxjs';
 import { CountdownRepository } from '../../core/data/countdown-repository';
 import { LanguageService } from '../../core/i18n/language.service';
 import { LocalDatePipe } from '../../core/i18n/local-date.pipe';
-import { Appointment } from '../../core/models';
+import { Appointment, Countdown } from '../../core/models';
 import { ConfirmDialog, ConfirmDialogContext } from '../../shared/confirm-dialog';
 import { openDialog } from '../../shared/dialog';
 import { AppointmentIconGroup } from '../../shared/appointment-style';
@@ -140,6 +147,8 @@ import { RememberedIconGroup } from './remembered-icon-group';
 export class AdminDetailPage {
   /** Bound from the `admin/:id` route parameter. */
   readonly id = input.required<string>();
+  readonly countdownResource = input<Resource<Countdown | undefined>>();
+  readonly appointmentsResource = input<Resource<Appointment[]>>();
 
   private readonly repository = inject(CountdownRepository);
   private readonly dialog = inject(HlmDialogService);
@@ -150,21 +159,9 @@ export class AdminDetailPage {
 
   private readonly countdownId = computed(() => Number(this.id()));
 
-  protected readonly countdown = toSignal(
-    toObservable(this.countdownId).pipe(
-      switchMap((id) =>
-        Number.isInteger(id) ? this.repository.watchCountdown(id) : of(undefined),
-      ),
-    ),
-    { initialValue: undefined },
-  );
+  protected readonly countdown = computed(() => this.countdownResource()?.value());
 
-  protected readonly appointments = toSignal(
-    toObservable(this.countdownId).pipe(
-      switchMap((id) => (Number.isInteger(id) ? this.repository.watchAppointments(id) : of([]))),
-    ),
-    { initialValue: [] },
-  );
+  protected readonly appointments = computed(() => this.appointmentsResource()?.value() ?? []);
 
   constructor() {
     // Opening another countdown starts its new appointments on the first group again.
