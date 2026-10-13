@@ -1,0 +1,32 @@
+@if (native) {
+  <select
+    class="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-8 rounded-md border bg-transparent px-2 text-sm outline-none focus-visible:ring-3"
+    [attr.aria-label]="'appointmentDialog.iconGroup' | translate"
+    data-testid="icon-group"
+    (change)="valueChange.emit($any($event.target).value)"
+  >
+    @for (group of groups; track group) {
+      <option [value]="group" [selected]="group === value()">
+        {{ 'appointment.groups.' + group | translate }}
+      </option>
+    }
+  </select>
+} @else {
+  <label hlmLabel class="sr-only" for="icon-group-trigger">
+    {{ 'appointmentDialog.iconGroup' | translate }}
+  </label>
+  <hlm-select [value]="value()" (valueChange)="pick($event)">
+    <hlm-select-trigger buttonId="icon-group-trigger" size="sm" data-testid="icon-group">
+      <ng-container *hlmSelectValueTemplate="let group">
+        {{ 'appointment.groups.' + group | translate }}
+      </ng-container>
+    </hlm-select-trigger>
+    <hlm-select-content *hlmSelectPortal class="min-w-56">
+      @for (group of groups; track group) {
+        <hlm-select-item [value]="group" [attr.data-testid]="'icon-group-option-' + group">
+          {{ 'appointment.groups.' + group | translate }}
+        </hlm-select-item>
+      }
+    </hlm-select-content>
+  </hlm-select>
+}
