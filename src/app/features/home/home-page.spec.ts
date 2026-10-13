@@ -15,6 +15,7 @@ import { APP_VERSION } from '../../core/app-info';
 import { CountdownRepository } from '../../core/data/countdown-repository';
 import { HOW_LONG_DB, HowLongDatabase } from '../../core/data/db';
 import { LanguageService } from '../../core/i18n/language.service';
+import { CurrentDateService } from '../../core/services/current-date.service';
 import { toIsoDate } from '../../core/services/date-utils';
 import { AboutDialog } from './about-dialog';
 import { CountdownPicker } from './countdown-picker';
@@ -517,14 +518,15 @@ describe('HomePage', () => {
         .querySelector(selector)
         .dispatchEvent(new Event(type, { bubbles: true }));
 
-    it('keeps the day count while the page stays open', async () => {
+    it('recounts when the shared current date changes', async () => {
       await repository.createCountdown({ date: inDays(10) });
       await render();
 
       nextDay();
+      TestBed.inject(CurrentDateService).refresh();
       fixture.detectChanges();
 
-      expect(text('day-count')).toBe('10');
+      expect(text('day-count')).toBe('9');
     });
 
     it('recounts when the day count is double-clicked', async () => {

@@ -25,7 +25,14 @@
     "daysToGo": "days to go"
   },
   "appointments": {
-    "none": "No appointments yet."
+    "none": "No appointments yet.",
+    "dayCount": {
+      "today": "Today",
+      "inOneDay": "In one day",
+      "inDays": "In {{count}} days",
+      "oneDayAgo": "One day ago",
+      "daysAgo": "{{count}} days ago"
+    }
   },
   "home": {
     "emptyState": "No countdown configured yet.",

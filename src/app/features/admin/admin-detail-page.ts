@@ -17,6 +17,7 @@ import { CountdownRepository } from '../../core/data/countdown-repository';
 import { LanguageService } from '../../core/i18n/language.service';
 import { LocalDatePipe } from '../../core/i18n/local-date.pipe';
 import { Appointment, Countdown } from '../../core/models';
+import { AppointmentDayCount } from '../../shared/appointment-day-count';
 import { ConfirmDialog, ConfirmDialogContext } from '../../shared/confirm-dialog';
 import { openDialog } from '../../shared/dialog';
 import { AppointmentIconGroup } from '../../shared/appointment-style';
@@ -32,7 +33,7 @@ import { RememberedIconGroup } from './remembered-icon-group';
 @Component({
   selector: 'app-admin-detail-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [HlmButton, LocalDatePipe, NgIcon, RouterLink, TranslatePipe],
+  imports: [AppointmentDayCount, HlmButton, LocalDatePipe, NgIcon, RouterLink, TranslatePipe],
   templateUrl: './admin-detail-page.html',
 })
 export class AdminDetailPage {

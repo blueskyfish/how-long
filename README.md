@@ -28,8 +28,9 @@ between devices as a JSON file you download and drop back in.
 ## Features
 
 - **Countdown** — days remaining in a circle, the target date, an optional description, and
-  the next five upcoming appointments, with a "More" overlay for the full list. With several
-  target dates stored, the date doubles as a dropdown to switch between them.
+  the next five upcoming appointments with their day count, with a "More" overlay for the
+  full list. With several target dates stored, the date doubles as a dropdown to switch
+  between them.
 - **Administration** — manage several target dates and the appointments belonging to each.
 - **Backup** — export everything as JSON; import it back by file picker or by dropping the
   file onto the administration page, either replacing or adding to what is stored.
