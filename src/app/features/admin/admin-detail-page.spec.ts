@@ -83,6 +83,7 @@ describe('AdminDetailPage', () => {
       ...fixture.nativeElement.querySelectorAll('main li > span > span:first-child'),
     ].map((node: Element) => node.textContent?.trim());
     expect(titles).toEqual(['Advent', 'St Nicholas']);
+    expect(fixture.nativeElement.querySelectorAll('app-appointment-day-count').length).toBe(2);
   });
 
   it('updates the appointments resource when an appointment is created', async () => {

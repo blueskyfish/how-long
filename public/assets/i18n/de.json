@@ -25,7 +25,14 @@
     "daysToGo": "Tage übrig"
   },
   "appointments": {
-    "none": "Noch keine Termine."
+    "none": "Noch keine Termine.",
+    "dayCount": {
+      "today": "Heute",
+      "inOneDay": "In einem Tag",
+      "inDays": "In {{count}} Tagen",
+      "oneDayAgo": "Vor einem Tag",
+      "daysAgo": "Vor {{count}} Tagen"
+    }
   },
   "home": {
     "emptyState": "Noch kein Countdown eingerichtet.",
