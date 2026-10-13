@@ -106,11 +106,12 @@ Merging stays a manual step on GitHub.
 ## Releases
 
 The app is a private package and is not published to npm. User-facing changes are recorded
-in [`CHANGELOG.md`](CHANGELOG.md) when a version bump is prepared with the
-[`bump-publish` skill](.github/skills/bump-publish/SKILL.md). That workflow opens a version
-pull request; after it is merged, rerun the skill with the same version to publish a
-matching GitHub Release and tag. GitHub Pages deployment continues to run automatically
-after the pull request is merged.
+in [`CHANGELOG.md`](CHANGELOG.md) by the [`publish` skill](.github/skills/publish/SKILL.md),
+not by the [`bump` skill](.github/skills/bump/SKILL.md). `bump` updates the package version
+and opens a version pull request. After it is merged, the first `publish` invocation adds
+the changelog entry and opens a separate pull request; after that is merged, invoke
+`publish` again with the same stable version to create the matching GitHub Release and tag.
+GitHub Pages deployment continues to run automatically after merged pull requests.
 
 ## Architecture
 
