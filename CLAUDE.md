@@ -49,6 +49,12 @@ Node 24 and npm 12 are pinned in `mise.toml`, which CI reads as well.
 - `main` is protected and accepts changes only through pull requests. Never push to it
   directly, and leave merging to the user.
 
+## Skills
+
+The project skills `bump`, `cleanup` and `publish` live in `.github/skills/` (shared with
+GitHub Copilot). `.claude/skills/` only holds symlinks to them, so edit the files in
+`.github/skills/`.
+
 ## Architecture
 
 Angular 22 PWA with no backend: standalone components, signals, zoneless change detection,
