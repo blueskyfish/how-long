@@ -192,7 +192,7 @@ describe('HomePage', () => {
     expect(text('day-count')).toBeUndefined();
   });
 
-  it('previews at most five upcoming appointments and offers the rest behind "More"', async () => {
+  it('previews at most four upcoming appointments and offers the rest behind "More"', async () => {
     const countdownId = await repository.createCountdown({ date: inDays(60) });
     for (let i = 1; i <= 7; i++) {
       await repository.createAppointment({
@@ -209,9 +209,9 @@ describe('HomePage', () => {
     const titles = [...fixture.nativeElement.querySelectorAll('app-appointment-list li')].map(
       (li: Element) => li.textContent?.trim(),
     );
-    expect(titles).toHaveLength(5);
+    expect(titles).toHaveLength(4);
     expect(titles[0]).toContain('Milestone 1');
-    expect(titles[4]).toContain('Milestone 5');
+    expect(titles[3]).toContain('Milestone 4');
     expect(text('more-button')).toBe('More (7)');
   });
 
