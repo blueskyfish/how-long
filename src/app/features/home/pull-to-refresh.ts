@@ -10,8 +10,8 @@ const MAX_PULL_PX = 96;
 const RESISTANCE = 0.5;
 
 /**
- * Pull-to-refresh for a page that scrolls with the document: one finger dragged
- * down while the page is scrolled to the top. Only reports the gesture — the
+ * Pull-to-refresh: one finger dragged down while neither the document nor the
+ * element under the finger is scrolled. Only reports the gesture — the
  * host decides what refreshing means and renders an indicator from
  * {@link distance}.
  *
@@ -50,7 +50,7 @@ export class PullToRefresh {
 
   protected start(event: TouchEvent): void {
     // A second finger turns the gesture into a pinch, which is never a pull.
-    if (event.touches.length !== 1 || this.scrollTop() > 0) {
+    if (event.touches.length !== 1 || this.isScrolled(event.target)) {
       this.cancel();
       return;
     }
@@ -90,7 +90,16 @@ export class PullToRefresh {
     this.distance.set(0);
   }
 
-  private scrollTop(): number {
-    return this.document.defaultView?.scrollY ?? 0;
+  /** The document, or any element the touch started in, is scrolled away from its top. */
+  private isScrolled(target: EventTarget | null): boolean {
+    if ((this.document.defaultView?.scrollY ?? 0) > 0) {
+      return true;
+    }
+    for (let el = target instanceof Element ? target : null; el; el = el.parentElement) {
+      if (el.scrollTop > 0) {
+        return true;
+      }
+    }
+    return false;
   }
 }
