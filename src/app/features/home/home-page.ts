@@ -31,7 +31,7 @@ import { PULL_THRESHOLD_PX, PullToRefresh } from './pull-to-refresh';
 import { RememberedCountdown } from './remembered-countdown';
 
 /** Number of appointments shown before the "more" overlay is offered. */
-const PREVIEW_COUNT = 5;
+const PREVIEW_COUNT = 4;
 
 /** From this many days before the target date, and on the day itself, the page turns red. */
 const URGENT_WITHIN_DAYS = 3;
@@ -51,7 +51,8 @@ const URGENT_WITHIN_DAYS = 3;
   hostDirectives: [PullToRefresh],
   host: {
     // On the host rather than <main>, so the tint spans the whole viewport, notch included.
-    class: 'data-urgent:bg-destructive/10 block min-h-dvh transition-colors duration-700',
+    class:
+      'data-urgent:bg-destructive/10 block h-dvh overflow-hidden transition-colors duration-700',
     '[attr.data-urgent]': "urgent() ? '' : null",
   },
   templateUrl: './home-page.html',

@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Appointment rows are more compact: the day count sits closer to the date in a smaller font.
+- The start page previews four appointments instead of five and no longer scrolls.
+
 ## [0.3.3] - 2026-10-13
 
 ### Added

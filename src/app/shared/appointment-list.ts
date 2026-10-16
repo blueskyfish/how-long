@@ -25,7 +25,7 @@ import { AppointmentDayCount } from './appointment-day-count';
           />
           <span class="shrink-0">
             <time
-              class="text-muted-foreground block font-mono text-sm tabular-nums"
+              class="text-muted-foreground block font-mono text-sm leading-tight tabular-nums"
               [attr.datetime]="appointment.date"
             >
               {{ appointment.date | localDate }}
