@@ -105,6 +105,15 @@ describe('PullToRefresh', () => {
     expect(fixture.componentInstance.refreshes).toBe(0);
   });
 
+  it('does not start while the element under the finger is scrolled', () => {
+    Object.defineProperty(element, 'scrollTop', { configurable: true, value: 40 });
+
+    drag(200);
+    touch(element, 'touchend', []);
+
+    expect(fixture.componentInstance.refreshes).toBe(0);
+  });
+
   it("switches the browser's own pull-to-refresh off while it is alive", () => {
     const root = TestBed.inject(DOCUMENT).documentElement;
     expect(root.style.overscrollBehaviorY).toBe('contain');

@@ -5,7 +5,7 @@
 ### Changed
 
 - Appointment rows are more compact: the day count sits closer to the date in a smaller font.
-- The start page previews four appointments instead of five and no longer scrolls.
+- The start page previews four appointments instead of five and no longer scrolls the page. Only where the screen is too short does the content scroll within itself, so "More" stays reachable.
 
 ## [0.3.3] - 2026-10-13
 

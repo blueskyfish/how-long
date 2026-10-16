@@ -8,7 +8,7 @@ import { daysUntil } from '../core/services/date-utils';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TranslatePipe],
   template: `
-    <span class="text-muted-foreground block text-[11px] leading-none tabular-nums">
+    <span class="text-muted-foreground mt-0.5 block text-[11px] leading-none tabular-nums">
       {{ label() | translate: { count: dayCount() } }}
     </span>
   `,
