@@ -4,6 +4,7 @@
 
 ### Changed
 
+- The browser's top bar around the notch now matches the page background in light and dark mode instead of a fixed blue.
 - Appointment rows are more compact: the day count sits closer to the date in a smaller font.
 - The start page previews four appointments instead of five and no longer scrolls the page. Only where the screen is too short does the content scroll within itself, so "More" stays reachable.
 
