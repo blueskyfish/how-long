@@ -72,8 +72,10 @@ the hash location strategy (`#/admin/3`), so the build can be served from any pa
   DST cannot cause off-by-one). Which countdown the start page shows is decided by
   `pickNextCountdown` in `core/services/next-countdown.ts`; a user's choice is kept in the
   `countdown` query parameter, bound as a component input, and remembered in `localStorage`
-  by `features/home/remembered-countdown.ts` (query parameter → remembered, unless its date
-  has passed → next due).
+  by `features/home/remembered-countdown.ts` (query parameter → remembered → next due; a
+  countdown whose date has passed is skipped at every step, and with none left the start page
+  shows the empty state). Passed appointments are hidden on the start page; the admin
+  pages keep them but allow only deleting (a passed countdown: delete from the overview only).
   Specs provide `COUNTDOWN_STORAGE` with `memoryStorage()` from `src/testing/storage.ts`.
 - **Forms** — Signal Forms (`@angular/forms/signals`), not reactive forms. A dialog keeps its
   values in a `signal` model and wraps it in `form(model, schema)`; rules (`required`,

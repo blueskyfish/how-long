@@ -17,10 +17,8 @@ describe('pickNextCountdown', () => {
     expect(pickNextCountdown(countdowns('2026-09-25'), today)?.date).toBe('2026-09-25');
   });
 
-  it('falls back to the most recent past countdown', () => {
-    expect(pickNextCountdown(countdowns('2020-01-01', '2021-01-01'), today)?.date).toBe(
-      '2021-01-01',
-    );
+  it('returns undefined when every countdown has passed', () => {
+    expect(pickNextCountdown(countdowns('2020-01-01', '2021-01-01'), today)).toBeUndefined();
   });
 
   it('returns undefined for an empty list', () => {

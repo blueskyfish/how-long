@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -17,6 +18,7 @@ import { LanguageService } from '../../core/i18n/language.service';
 import { LocalDatePipe } from '../../core/i18n/local-date.pipe';
 import { Countdown } from '../../core/models';
 import { daysUntil } from '../../core/services/date-utils';
+import { isAhead } from '../../core/services/next-countdown';
 import { ConfirmDialog, ConfirmDialogContext } from '../../shared/confirm-dialog';
 import { openDialog } from '../../shared/dialog';
 import { FileTransferService } from '../../shared/file-transfer.service';
@@ -28,7 +30,15 @@ import { CountdownDialog, CountdownDialogContext, CountdownDialogResult } from '
 @Component({
   selector: 'app-admin-overview-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [HlmButton, LanguageSwitch, LocalDatePipe, NgIcon, RouterLink, TranslatePipe],
+  imports: [
+    HlmButton,
+    LanguageSwitch,
+    LocalDatePipe,
+    NgIcon,
+    NgTemplateOutlet,
+    RouterLink,
+    TranslatePipe,
+  ],
   host: {
     '(dragover)': 'onDragOver($event)',
     '(dragleave)': 'onDragLeave($event)',
@@ -51,6 +61,11 @@ export class AdminOverviewPage {
 
   protected readonly countdowns = computed(() => this.countdownsResource()?.value() ?? []);
   protected readonly dragging = signal(false);
+
+  /** A passed countdown can no longer be opened or changed, only deleted. */
+  protected isPassed(countdown: Countdown): boolean {
+    return !isAhead(countdown, this.today);
+  }
 
   /** Which text says how far off a countdown is, and the number it needs. */
   protected remainingIn(countdown: Countdown): { key: string; count: number } {

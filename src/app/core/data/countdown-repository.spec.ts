@@ -208,13 +208,11 @@ describe('CountdownRepository', () => {
       });
     });
 
-    it('falls back to the most recent past countdown when all have passed', async () => {
+    it('returns undefined when all countdowns have passed', async () => {
       await repository.createCountdown({ date: '2020-01-01' });
-      const latest = await repository.createCountdown({ date: '2021-01-01' });
+      await repository.createCountdown({ date: '2021-01-01' });
 
-      expect(await repository.findNextCountdown(new Date(2026, 8, 25))).toMatchObject({
-        id: latest,
-      });
+      await expect(repository.findNextCountdown(new Date(2026, 8, 25))).resolves.toBeUndefined();
     });
 
     it('returns undefined when there is no countdown at all', async () => {
