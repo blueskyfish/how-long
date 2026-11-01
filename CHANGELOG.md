@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.5] - 2026-11-01
+
+### Changed
+
+- Passed countdowns and appointments are no longer shown on the start page, in the dropdown or in the full appointment list. When every countdown has passed, the start page shows the same empty state as when none exists.
+- In the administration, a passed countdown is listed without a link and can only be deleted. A passed appointment stays listed but can only be deleted, and a passed countdown opened by its address offers no editing.
+
 ## [0.3.4] - 2026-10-16
 
 ### Changed
