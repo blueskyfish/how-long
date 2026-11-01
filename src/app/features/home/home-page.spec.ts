@@ -18,6 +18,7 @@ import { LanguageService } from '../../core/i18n/language.service';
 import { CurrentDateService } from '../../core/services/current-date.service';
 import { toIsoDate } from '../../core/services/date-utils';
 import { AboutDialog } from './about-dialog';
+import { AllAppointmentsDialogContext } from './all-appointments-dialog';
 import { CountdownPicker } from './countdown-picker';
 import { HomePage } from './home-page';
 import { COUNTDOWN_STORAGE } from './remembered-countdown';
@@ -126,13 +127,25 @@ describe('HomePage', () => {
     expect(text('day-label')).toBe('today');
   });
 
-  it('counts up when every countdown has already passed', async () => {
-    await repository.createCountdown({ date: inDays(-3) });
+  it('shows the empty state when every countdown has already passed', async () => {
+    await repository.createCountdown({ date: inDays(-3), description: 'Passed' });
 
     await render();
 
-    expect(text('day-count')).toBe('3');
-    expect(text('day-label')).toBe('days ago');
+    expect(text('empty-state')).toBe('No countdown configured yet.');
+    expect(text('day-count')).toBeUndefined();
+    expect(text('description')).toBeUndefined();
+  });
+
+  it('does not offer a passed countdown in the picker', async () => {
+    await repository.createCountdown({ date: inDays(-3), description: 'Passed' });
+    await repository.createCountdown({ date: inDays(10), description: 'Sooner' });
+
+    await render();
+
+    expect(
+      fixture.debugElement.query(By.directive(CountdownPicker)).componentInstance.hasChoice(),
+    ).toBe(false);
   });
 
   describe('when the target date is close', () => {
@@ -155,14 +168,6 @@ describe('HomePage', () => {
 
     it('stays calm four days before', async () => {
       await repository.createCountdown({ date: inDays(4) });
-
-      await render();
-
-      expect(isUrgent()).toEqual({ page: false, circle: false });
-    });
-
-    it('stays calm once the date has passed', async () => {
-      await repository.createCountdown({ date: inDays(-1) });
 
       await render();
 
@@ -237,6 +242,31 @@ describe('HomePage', () => {
     const list = fixture.nativeElement.querySelector('app-appointment-list').textContent;
     expect(list).toContain('Still ahead');
     expect(list).not.toContain('Already done');
+    expect(text('more-button')).toBeUndefined();
+  });
+
+  it('leaves past appointments out of the full list too', async () => {
+    const countdownId = await repository.createCountdown({ date: inDays(60) });
+    await addAppointment(countdownId, inDays(-5), 'Already done');
+    for (let day = 1; day <= 5; day++) {
+      await addAppointment(countdownId, inDays(day), `Milestone ${day}`);
+    }
+    const open = stubDialog(undefined);
+
+    await render();
+    expect(text('more-button')).toBe('More (5)');
+    fixture.nativeElement.querySelector('[data-testid="more-button"]').click();
+
+    const { context } = open.mock.calls[0][1] as unknown as {
+      context: AllAppointmentsDialogContext;
+    };
+    expect(context.appointments.map(({ title }) => title)).toEqual([
+      'Milestone 1',
+      'Milestone 2',
+      'Milestone 3',
+      'Milestone 4',
+      'Milestone 5',
+    ]);
   });
 
   it('hides the "More" button when every appointment already fits', async () => {
@@ -351,13 +381,13 @@ describe('HomePage', () => {
       expect(text('description')).toBe('Today');
     });
 
-    it('still shows a passed countdown named by the query parameter', async () => {
+    it('ignores a passed countdown named by the query parameter', async () => {
       const passed = await repository.createCountdown({ date: inDays(-2), description: 'Passed' });
       await repository.createCountdown({ date: inDays(10), description: 'Sooner' });
 
       await render(passed);
 
-      expect(text('description')).toBe('Passed');
+      expect(text('description')).toBe('Sooner');
     });
 
     it('falls back to the next countdown once the remembered one is deleted', async () => {

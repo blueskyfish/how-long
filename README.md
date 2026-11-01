@@ -201,11 +201,16 @@ document.documentElement.style.setProperty('--safe-top', '59px');
 
 ### Which countdown does the start page show?
 
-By default the earliest countdown that has not passed — today counts as "not passed". If
-every target date is in the past, the most recent one is shown instead, counting upwards
-("3 days ago"), so the page is never blank while data exists. The rule lives in
-[`pickNextCountdown`](src/app/core/services/next-countdown.ts) and is shared with the
-repository.
+By default the earliest countdown that has not passed — today counts as "not passed". A
+passed countdown is never shown on the start page, nor offered in the dropdown. If every
+target date is in the past, the page looks as if nothing had been created and offers to create
+one. The rule lives in [`pickNextCountdown`](src/app/core/services/next-countdown.ts) and is
+shared with the repository.
+
+Appointments follow the same rule: one dated before today is left out of the preview, the
+count behind "More" and the full list. On the administration pages a passed countdown is
+listed without a link and can only be deleted (a direct URL opens its detail page without
+the edit and add buttons), and a passed appointment stays listed but can only be deleted.
 
 Once a second target date exists, the date under the circle becomes a dropdown. Picking one
 writes it to the `countdown` query parameter (`#/?countdown=3`), which is bound straight
@@ -214,10 +219,9 @@ through it, and a parameter naming a deleted countdown falls back to the default
 
 The pick is also remembered in `localStorage`, so reopening the app without the parameter —
 from the home screen, for instance — shows the same countdown again. The order is: the query
-parameter, then the remembered pick, then the next countdown due. A remembered countdown
-that has since been deleted is skipped, and so is one whose date has passed — the target day
-itself still counts — so the page moves on to the next countdown due. A passed countdown
-named by the query parameter is still shown. The pick is a per-device preference and is not part
+parameter, then the remembered pick, then the next countdown due. A remembered or named
+countdown that has since been deleted is skipped, and so is one whose date has passed — the
+target day itself still counts — so the page moves on to the next countdown due. The pick is a per-device preference and is not part
 of the backup.
 
 ### Backup format

@@ -80,13 +80,38 @@ describe('AdminOverviewPage', () => {
   });
 
   it('links each row to its detail page', async () => {
-    const id = await repository.createCountdown({ date: '2026-12-24' });
+    const id = await repository.createCountdown({ date: '2099-12-24' });
 
     await render();
 
     expect(fixture.nativeElement.querySelector('main li a').getAttribute('href')).toBe(
       `#/admin/${id}`,
     );
+  });
+
+  it('offers a passed countdown only for deletion', async () => {
+    const passed = await repository.createCountdown({ date: '2020-01-01', description: 'Old' });
+    await repository.createCountdown({ date: '2099-12-24', description: 'Ahead' });
+
+    await render();
+
+    const rows: HTMLElement[] = [...fixture.nativeElement.querySelectorAll('main li')];
+    expect(rows[0].querySelector('a')).toBeNull();
+    expect(rows[0].querySelector('[data-testid="passed-countdown"]')?.textContent).toContain('Old');
+    expect(rows[0].querySelector('[aria-label="Delete countdown 2020-01-01"]')).not.toBeNull();
+    expect(rows[1].querySelector('a')?.getAttribute('href')).not.toBe(`#/admin/${passed}`);
+    expect(rows[1].querySelector('a')).not.toBeNull();
+  });
+
+  it('deletes a passed countdown once the confirmation is accepted', async () => {
+    await repository.createCountdown({ date: '2020-01-01' });
+    await render();
+    stubDialog(true);
+
+    fixture.nativeElement.querySelector('[aria-label="Delete countdown 2020-01-01"]').click();
+    await settle(fixture);
+
+    expect(await repository.listCountdowns()).toEqual([]);
   });
 
   it('stores the countdown returned by the create dialog', async () => {

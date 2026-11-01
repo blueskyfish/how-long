@@ -20,7 +20,7 @@ import { CountdownRepository } from '../../core/data/countdown-repository';
 import { Countdown } from '../../core/models';
 import { CurrentDateService } from '../../core/services/current-date.service';
 import { daysUntil, toIsoDate } from '../../core/services/date-utils';
-import { pickNextCountdown } from '../../core/services/next-countdown';
+import { isAhead, pickNextCountdown } from '../../core/services/next-countdown';
 import { AppointmentList } from '../../shared/appointment-list';
 import { openDialog } from '../../shared/dialog';
 import { AboutDialog } from './about-dialog';
@@ -63,7 +63,8 @@ export class HomePage {
   /**
    * Bound from the `countdown` query parameter, so the pick survives a reload and
    * the back button steps through it. Unset — or pointing at a countdown that has
-   * since been deleted — falls back to the remembered pick, then the next one due.
+   * since been deleted or has passed — falls back to the remembered pick, then the
+   * next one due.
    */
   readonly countdown = input<string>();
 
@@ -83,24 +84,26 @@ export class HomePage {
     () => (this.pull.distance() / PULL_THRESHOLD_PX) * 360,
   );
 
-  protected readonly countdowns = computed(() => this.countdownsResource()?.value() ?? []);
+  /**
+   * Only the countdowns whose date has not passed — the target day itself still
+   * counts. A passed one is neither shown nor offered; when none is left the page
+   * looks as if nothing had been created.
+   */
+  protected readonly countdowns = computed(() =>
+    (this.countdownsResource()?.value() ?? []).filter((countdown) =>
+      isAhead(countdown, this.currentDate.today()),
+    ),
+  );
 
-  /** The countdown named by the query parameter, if it still exists. */
+  /** The countdown named by the query parameter, if it still exists and is ahead. */
   private readonly fromUrl = computed(() =>
     this.countdowns().find((countdown) => `${countdown.id}` === this.countdown()),
   );
 
-  /**
-   * The countdown remembered from an earlier pick, as long as its date has not
-   * passed — the target day itself still counts. Once it has, the page moves on
-   * to the next one due rather than counting upwards.
-   */
-  private readonly rememberedAhead = computed(() => {
-    const countdown = this.countdowns().find(({ id }) => id === this.remembered.id());
-    return countdown && daysUntil(countdown.date, this.currentDate.today()) >= 0
-      ? countdown
-      : undefined;
-  });
+  /** The countdown remembered from an earlier pick, as long as it is still ahead. */
+  private readonly rememberedAhead = computed(() =>
+    this.countdowns().find(({ id }) => id === this.remembered.id()),
+  );
 
   protected readonly active = computed(
     () =>
@@ -119,27 +122,26 @@ export class HomePage {
     { initialValue: [] },
   );
 
-  /** Signed: negative once the target date has passed. */
   protected readonly daysRemaining = computed(() => {
     const countdown = this.active();
     return countdown ? daysUntil(countdown.date, this.currentDate.today()) : 0;
   });
 
-  /** The target date is at most {@link URGENT_WITHIN_DAYS} days away and not yet passed. */
-  protected readonly urgent = computed(() => {
-    const days = this.daysRemaining();
-    return this.active() !== undefined && days >= 0 && days <= URGENT_WITHIN_DAYS;
-  });
+  /** The target date is at most {@link URGENT_WITHIN_DAYS} days away. */
+  protected readonly urgent = computed(
+    () => this.active() !== undefined && this.daysRemaining() <= URGENT_WITHIN_DAYS,
+  );
 
-  /** Only appointments that are still ahead, capped at {@link PREVIEW_COUNT}. */
+  /** Only appointments that are still ahead; passed ones are shown nowhere on this page. */
   protected readonly upcoming = computed(() => {
     const isoToday = toIsoDate(this.currentDate.today());
     return this.appointments().filter((appointment) => appointment.date >= isoToday);
   });
 
+  /** The first {@link PREVIEW_COUNT} of {@link upcoming}. */
   protected readonly preview = computed(() => this.upcoming().slice(0, PREVIEW_COUNT));
 
-  protected readonly hasMore = computed(() => this.appointments().length > this.preview().length);
+  protected readonly hasMore = computed(() => this.upcoming().length > this.preview().length);
 
   constructor() {
     // A pick always passes through the URL, so this also covers the dropdown.
@@ -171,7 +173,7 @@ export class HomePage {
     }
     openDialog<void, AllAppointmentsDialogContext>(this.dialog, AllAppointmentsDialog, {
       targetDate: countdown.date,
-      appointments: this.appointments(),
+      appointments: this.upcoming(),
     });
   }
 

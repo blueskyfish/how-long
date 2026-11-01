@@ -15,7 +15,7 @@
       {{ (countdown()?.date | localDate) || '…' }}
     </h1>
     <span class="flex-1"></span>
-    @if (countdown()) {
+    @if (editable()) {
       <button
         hlmBtn
         variant="ghost"
@@ -39,7 +39,10 @@
 
     <ul class="m-0 flex list-none flex-col gap-2 p-0">
       @for (appointment of appointments(); track appointment.id) {
-        <li class="border-border bg-card flex items-center gap-3 rounded-xl border px-4 py-3">
+        <li
+          class="border-border bg-card flex items-center gap-3 rounded-xl border px-4 py-3"
+          [class.opacity-60]="isPassed(appointment)"
+        >
           <ng-icon
             [name]="appointment.icon"
             [style.color]="appointment.color"
@@ -60,6 +63,7 @@
             [attr.aria-label]="
               'admin.detail.editAppointment' | translate: { title: appointment.title }
             "
+            [disabled]="isPassed(appointment)"
             (click)="editAppointment(appointment)"
           >
             <ng-icon name="lucidePencil" class="text-lg" />
@@ -89,7 +93,7 @@
   }
 </main>
 
-@if (countdown()) {
+@if (editable()) {
   <button
     hlmBtn
     size="icon-lg"

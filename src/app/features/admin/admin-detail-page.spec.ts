@@ -39,7 +39,7 @@ describe('AdminDetailPage', () => {
     repository = TestBed.inject(CountdownRepository);
     await db.open();
     countdownId = await repository.createCountdown({
-      date: '2026-12-24',
+      date: '2099-12-24',
       description: 'Christmas',
     });
   });
@@ -69,13 +69,13 @@ describe('AdminDetailPage', () => {
 
     expect(
       fixture.nativeElement.querySelector('[data-testid="target-date"]').textContent.trim(),
-    ).toBe('2026-12-24');
+    ).toBe('2099-12-24');
     expect(fixture.nativeElement.textContent).toContain('Christmas');
   });
 
   it('lists the appointments ordered by date', async () => {
-    await addAppointment('2026-12-06', 'St Nicholas');
-    await addAppointment('2026-12-01', 'Advent');
+    await addAppointment('2099-12-06', 'St Nicholas');
+    await addAppointment('2099-12-01', 'Advent');
 
     await render();
 
@@ -89,7 +89,7 @@ describe('AdminDetailPage', () => {
   it('updates the appointments resource when an appointment is created', async () => {
     await render();
 
-    await addAppointment('2026-12-01', 'Advent');
+    await addAppointment('2099-12-01', 'Advent');
     await settle(fixture);
 
     expect(fixture.nativeElement.textContent).toContain('Advent');
@@ -104,19 +104,19 @@ describe('AdminDetailPage', () => {
 
   it('adds the appointment returned by the dialog', async () => {
     await render();
-    stubDialog({ date: '2026-12-01', title: 'Advent', color: '#e53935', icon: 'lucideStar' });
+    stubDialog({ date: '2099-12-01', title: 'Advent', color: '#e53935', icon: 'lucideStar' });
 
     fixture.nativeElement.querySelector('[data-testid="add-appointment"]').click();
     await settle(fixture);
 
     expect(await repository.listAppointments(countdownId)).toMatchObject([
-      { date: '2026-12-01', title: 'Advent', color: '#e53935', icon: 'lucideStar' },
+      { date: '2099-12-01', title: 'Advent', color: '#e53935', icon: 'lucideStar' },
     ]);
   });
 
   describe('remembering the icon group', () => {
     const saved = (iconGroup: string, title = 'Advent') => ({
-      date: '2026-12-01',
+      date: '2099-12-01',
       title,
       color: '#e53935',
       icon: 'lucideCake',
@@ -150,7 +150,7 @@ describe('AdminDetailPage', () => {
     });
 
     it('also remembers the group used when editing', async () => {
-      await addAppointment('2026-12-01', 'Advent');
+      await addAppointment('2099-12-01', 'Advent');
       await render();
       stubDialog(saved('Travel & seasons', 'Renamed'));
       fixture.nativeElement.querySelector('[aria-label="Edit Advent"]').click();
@@ -172,7 +172,7 @@ describe('AdminDetailPage', () => {
     });
 
     it('starts on the first group again once another countdown is opened', async () => {
-      const other = await repository.createCountdown({ date: '2027-06-01' });
+      const other = await repository.createCountdown({ date: '2100-06-01' });
       await render();
       await addAppointmentThroughDialog(saved('Celebrations'));
       await harness.navigateByUrl(`/admin/${other}`, AdminDetailPage);
@@ -188,20 +188,20 @@ describe('AdminDetailPage', () => {
 
   it('creates an appointment the dialog returns for the target day', async () => {
     await render();
-    stubDialog({ date: '2026-12-24', title: 'The day', color: '#e53935', icon: 'lucideStar' });
+    stubDialog({ date: '2099-12-24', title: 'The day', color: '#e53935', icon: 'lucideStar' });
 
     fixture.nativeElement.querySelector('[data-testid="add-appointment"]').click();
     await settle(fixture);
 
     expect(await repository.listAppointments(countdownId)).toMatchObject([
-      { date: '2026-12-24', title: 'The day' },
+      { date: '2099-12-24', title: 'The day' },
     ]);
     expect(notifications.error).not.toHaveBeenCalled();
   });
 
   it('reports the invariant violation when the dialog returns a date after the target day', async () => {
     await render();
-    stubDialog({ date: '2026-12-25', title: 'Too late', color: '#e53935', icon: 'lucideStar' });
+    stubDialog({ date: '2099-12-25', title: 'Too late', color: '#e53935', icon: 'lucideStar' });
 
     fixture.nativeElement.querySelector('[data-testid="add-appointment"]').click();
     await settle(fixture);
@@ -213,20 +213,20 @@ describe('AdminDetailPage', () => {
   });
 
   it('applies an edit to an existing appointment', async () => {
-    await addAppointment('2026-12-01', 'Advent');
+    await addAppointment('2099-12-01', 'Advent');
     await render();
-    stubDialog({ date: '2026-12-02', title: 'Renamed', color: '#43a047', icon: 'lucideCake' });
+    stubDialog({ date: '2099-12-02', title: 'Renamed', color: '#43a047', icon: 'lucideCake' });
 
     fixture.nativeElement.querySelector('[aria-label="Edit Advent"]').click();
     await settle(fixture);
 
     expect(await repository.listAppointments(countdownId)).toMatchObject([
-      { date: '2026-12-02', title: 'Renamed', color: '#43a047', icon: 'lucideCake' },
+      { date: '2099-12-02', title: 'Renamed', color: '#43a047', icon: 'lucideCake' },
     ]);
   });
 
   it('deletes an appointment once the confirmation is accepted', async () => {
-    await addAppointment('2026-12-01', 'Advent');
+    await addAppointment('2099-12-01', 'Advent');
     await render();
     stubDialog(true);
 
@@ -237,7 +237,7 @@ describe('AdminDetailPage', () => {
   });
 
   it('keeps the appointment when the confirmation is declined', async () => {
-    await addAppointment('2026-12-01', 'Advent');
+    await addAppointment('2099-12-01', 'Advent');
     await render();
     stubDialog(false);
 
@@ -247,28 +247,54 @@ describe('AdminDetailPage', () => {
     expect(await repository.listAppointments(countdownId)).toHaveLength(1);
   });
 
+  it('keeps a passed appointment listed but allows only deleting it', async () => {
+    await addAppointment('2020-01-01', 'Long ago');
+    await addAppointment('2099-12-01', 'Advent');
+    await render();
+
+    const edit = (title: string): HTMLButtonElement =>
+      fixture.nativeElement.querySelector(`[aria-label="Edit ${title}"]`);
+    const remove = (title: string): HTMLButtonElement =>
+      fixture.nativeElement.querySelector(`[aria-label="Delete ${title}"]`);
+    expect(edit('Long ago').disabled).toBe(true);
+    expect(remove('Long ago').disabled).toBe(false);
+    expect(edit('Advent').disabled).toBe(false);
+  });
+
+  it('offers neither editing nor new appointments for a passed countdown', async () => {
+    const passed = await repository.createCountdown({ date: '2020-01-01' });
+
+    await render(passed);
+
+    expect(fixture.nativeElement.querySelector('[aria-label="Edit countdown"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-testid="add-appointment"]')).toBeNull();
+    expect(
+      fixture.nativeElement.querySelector('[data-testid="target-date"]').textContent.trim(),
+    ).toBe('2020-01-01');
+  });
+
   it('applies an edit to the countdown itself', async () => {
     await render();
-    stubDialog({ date: '2027-01-01', description: 'New year' });
+    stubDialog({ date: '2100-01-01', description: 'New year' });
 
     fixture.nativeElement.querySelector('[aria-label="Edit countdown"]').click();
     await settle(fixture);
 
     expect(await repository.getCountdown(countdownId)).toMatchObject({
-      date: '2027-01-01',
+      date: '2100-01-01',
       description: 'New year',
     });
   });
 
   it('refuses to move the target date before an existing appointment', async () => {
-    await addAppointment('2026-12-01', 'Advent');
+    await addAppointment('2099-12-01', 'Advent');
     await render();
     stubDialog({ date: '2026-11-01', description: undefined });
 
     fixture.nativeElement.querySelector('[aria-label="Edit countdown"]').click();
     await settle(fixture);
 
-    expect((await repository.getCountdown(countdownId))?.date).toBe('2026-12-24');
+    expect((await repository.getCountdown(countdownId))?.date).toBe('2099-12-24');
     expect(notifications.error).toHaveBeenCalledWith(
       expect.stringContaining('must not be after the target date'),
     );
@@ -291,15 +317,15 @@ describe('AdminDetailPage', () => {
     });
 
     it('writes the dates as DD.MM.YYYY and labels the buttons in German', async () => {
-      await addAppointment('2026-12-01', 'Advent');
+      await addAppointment('2099-12-01', 'Advent');
 
       await render();
 
       const page: HTMLElement = fixture.nativeElement;
       expect(page.querySelector('[data-testid="target-date"]')?.textContent?.trim()).toBe(
-        '24.12.2026',
+        '24.12.2099',
       );
-      expect(page.querySelector('main li')?.textContent).toContain('01.12.2026');
+      expect(page.querySelector('main li')?.textContent).toContain('01.12.2099');
       expect(page.querySelector('[aria-label="Advent bearbeiten"]')).toBeTruthy();
       expect(page.querySelector('[aria-label="Advent löschen"]')).toBeTruthy();
       expect(page.querySelector('[aria-label="Neuer Termin"]')).toBeTruthy();
@@ -315,13 +341,13 @@ describe('AdminDetailPage', () => {
 
     it('reports a violated invariant in German, with the days written the German way', async () => {
       await render();
-      stubDialog({ date: '2026-12-25', title: 'Too late', color: '#e53935', icon: 'lucideStar' });
+      stubDialog({ date: '2099-12-25', title: 'Too late', color: '#e53935', icon: 'lucideStar' });
 
       fixture.nativeElement.querySelector('[data-testid="add-appointment"]').click();
       await settle(fixture);
 
       expect(notifications.error).toHaveBeenCalledWith(
-        'Der Termin am 25.12.2026 darf nicht nach dem Zieldatum 24.12.2026 liegen',
+        'Der Termin am 25.12.2099 darf nicht nach dem Zieldatum 24.12.2099 liegen',
       );
     });
   });

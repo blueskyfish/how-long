@@ -17,6 +17,9 @@ import { CountdownRepository } from '../../core/data/countdown-repository';
 import { LanguageService } from '../../core/i18n/language.service';
 import { LocalDatePipe } from '../../core/i18n/local-date.pipe';
 import { Appointment, Countdown } from '../../core/models';
+import { CurrentDateService } from '../../core/services/current-date.service';
+import { toIsoDate } from '../../core/services/date-utils';
+import { isAhead } from '../../core/services/next-countdown';
 import { AppointmentDayCount } from '../../shared/appointment-day-count';
 import { ConfirmDialog, ConfirmDialogContext } from '../../shared/confirm-dialog';
 import { openDialog } from '../../shared/dialog';
@@ -48,16 +51,28 @@ export class AdminDetailPage {
   private readonly iconGroups = inject(RememberedIconGroup);
   private readonly translate = inject(TranslateService);
   private readonly language = inject(LanguageService);
+  private readonly currentDate = inject(CurrentDateService);
 
   private readonly countdownId = computed(() => Number(this.id()));
 
   protected readonly countdown = computed(() => this.countdownResource()?.value());
+
+  /** A passed countdown can only be deleted from the overview, not changed here. */
+  protected readonly editable = computed(() => {
+    const countdown = this.countdown();
+    return countdown !== undefined && isAhead(countdown, this.currentDate.today());
+  });
 
   protected readonly appointments = computed(() => this.appointmentsResource()?.value() ?? []);
 
   constructor() {
     // Opening another countdown starts its new appointments on the first group again.
     effect(() => this.iconGroups.enter(this.countdownId()));
+  }
+
+  /** A passed appointment stays listed but can only be deleted. */
+  protected isPassed(appointment: Appointment): boolean {
+    return appointment.date < toIsoDate(this.currentDate.today());
   }
 
   protected async editCountdown(): Promise<void> {
