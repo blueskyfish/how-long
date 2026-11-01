@@ -6,6 +6,22 @@ runs:
   steps:
     - name: Install Node and npm from mise.toml
       uses: jdx/mise-action@v4
+      with:
+        cache: true
+
+    - name: Verify the toolchain matches mise.toml
+      shell: bash
+      run: |
+        expected_node=$(mise current node)
+        expected_npm=$(mise current npm)
+        actual_node=$(node --version | sed 's/^v//')
+        actual_npm=$(npm --version)
+        echo "node ${actual_node} (mise.toml resolves to ${expected_node})"
+        echo "npm ${actual_npm} (mise.toml resolves to ${expected_npm})"
+        if [ "${actual_node}" != "${expected_node}" ] || [ "${actual_npm}" != "${expected_npm}" ]; then
+          echo "::error::The node or npm on PATH differs from the version mise.toml resolves to."
+          exit 1
+        fi
 
     - name: Install dependencies
       shell: bash
